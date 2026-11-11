@@ -2,7 +2,7 @@
 
 **Many people. One smarter purchase.**
 
-Stage 0 provides a premium responsive landing page, an honest application shell, and a FastAPI service foundation. Matching, products, payments, and scheduling are future work. No AI calls or financial transactions occur.
+Stage 0 provides a premium responsive landing page, an honest application shell, and a FastAPI service foundation. Frontend dependencies, the Aceternity-style Bento component, and brand styling are wired up; verification is performed via GitHub Actions where possible. Matching, products, payments, and scheduling are future work. No AI calls or financial transactions occur.
 
 Read [current status](docs/STATUS.md), [roadmap](docs/ROADMAP.md), [architecture](docs/ARCHITECTURE.md), [decisions](docs/DECISIONS.md), and [integration contracts](docs/INTEGRATION_CONTRACTS.md) before continuing development.
 
@@ -11,13 +11,14 @@ Read [current status](docs/STATUS.md), [roadmap](docs/ROADMAP.md), [architecture
 - Node.js **22.12+** and npm (verified with Node 22.23.2; [.nvmrc](.nvmrc) pins that version).
 - Python **3.12+** (verified with Python 3.13.14).
 - Docker Engine/Desktop and Docker Compose for local PostgreSQL. The web and liveness endpoint can run without it.
+- The project's MIT license is at [LICENSE](LICENSE).
 
 ## Start the frontend
 
 From the repository root:
 
 ```powershell
-npm --prefix apps/web ci
+npm ci --prefix apps/web
 Copy-Item apps/web/.env.example apps/web/.env.local
 npm run dev:web
 ```

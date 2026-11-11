@@ -15,7 +15,7 @@ const options: ISourceOptions = {
     opacity: { value: { min: 0.15, max: 0.45 } },
     size: { value: { min: 2, max: 4 } },
     links: { enable: true, distance: 95, color: "#7c9b5d", opacity: 0.12, width: 1 },
-    move: { enable: true, speed: 0.3, direction: "inside", outModes: { default: "bounce" } },
+    move: { enable: true, speed: 0.3, outModes: { default: "bounce" } },
   },
   interactivity: { events: { onClick: { enable: false }, onHover: { enable: false } } },
 };

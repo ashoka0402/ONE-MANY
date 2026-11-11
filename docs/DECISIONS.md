@@ -21,3 +21,7 @@ Compose uses PostgreSQL 17 and a named volume, binds only to `127.0.0.1`, and re
 ## Deferred functionality
 
 Authentication, business models, migrations, AI calls/matching, Channel3, PayPal, Bryntum, AG Grid, purchases, ledger records, and deployment are deferred. Provider contracts remain planning notes until implementation and provider verification. Commercial integration licensing will be decided before using paid functionality. There is no production security or payment-readiness claim for Stage 0.
+
+## Stage 0 recovery — interrupted Codex run
+
+Restore required tsParticles, Motion and Tailwind PostCSS packages; use the official Aceternity Bento Grid example adapted for the existing design system. Keep the Next.js links as semantic links rather than using Base UI Button's unsupported `asChild` syntax. Import brand.css after Tailwind globals. Add a CI workflow to regenerate the dependency lockfile once in GitHub Actions, then validate frontend, backend and Compose. Local npm registry and Docker are unavailable in the editing environment; any unrun check must remain explicitly unverified until CI confirms it.

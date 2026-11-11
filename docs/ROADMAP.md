@@ -1,6 +1,6 @@
 # Roadmap
 
-Current stage: **0 — Foundation and design system**. Stop here until the next explicit user prompt. Target hackathon deadline: **November 13, 2026, 01:30 IST**. Later stages are a proposed sequence, not authorization to implement them.
+Current stage: **0 — Foundation and design system** (source repairs committed; GitHub Actions verification should be checked). Stop here until the next explicit user prompt. Target hackathon deadline: **November 13, 2026, 01:30 IST**. Later stages are a proposed sequence, not authorization to implement them.
 
 | Stage | Scope | Acceptance criteria |
 | --- | --- | --- |
