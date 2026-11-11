@@ -1,4 +1,5 @@
 """User-owned need APIs; paid checkout and matching deliberately deferred."""
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -23,7 +24,9 @@ from one_many_api.schemas import (
 router = APIRouter(prefix="/api/v1")
 
 
-@router.post("/auth/register", response_model=AuthOut, status_code=status.HTTP_201_CREATED, tags=["auth"])
+@router.post(
+    "/auth/register", response_model=AuthOut, status_code=status.HTTP_201_CREATED, tags=["auth"]
+)
 def register(payload: RegisterIn, request: Request, db: Session = Depends(get_db)):
     if request.app.state.settings.auth_secret is None:
         raise HTTPException(503, "Authentication is not configured")

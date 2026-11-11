@@ -1,7 +1,8 @@
 """Alembic migration environment; schema is not created implicitly."""
-from alembic import context
+
 from sqlalchemy import create_engine
 
+from alembic import context
 from one_many_api.config import Settings
 from one_many_api.models import Base
 
@@ -30,7 +31,9 @@ def run_migrations_online() -> None:
     engine = create_engine(database_url(), pool_pre_ping=True)
     try:
         with engine.connect() as connection:
-            context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+            context.configure(
+                connection=connection, target_metadata=target_metadata, compare_type=True
+            )
             with context.begin_transaction():
                 context.run_migrations()
     finally:

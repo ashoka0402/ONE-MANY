@@ -1,4 +1,5 @@
 """Database tables for authenticated users and independently managed needs."""
+
 from datetime import date, datetime
 from uuid import UUID, uuid4
 
@@ -17,7 +18,9 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(254), unique=True, nullable=False)
     display_name: Mapped[str] = mapped_column(String(80), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(256), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
     needs: Mapped[list["Need"]] = relationship(back_populates="owner")
 
 
@@ -40,7 +43,13 @@ class Need(Base):
     location_label: Mapped[str | None] = mapped_column(String(120), nullable=True)
     needed_from: Mapped[date | None] = mapped_column(Date, nullable=True)
     needed_until: Mapped[date | None] = mapped_column(Date, nullable=True)
-    status: Mapped[str] = mapped_column(String(16), nullable=False, default="open", server_default="open")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
+    status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="open", server_default="open"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
     owner: Mapped[User] = relationship(back_populates="needs")

@@ -1,4 +1,5 @@
 """Stage 1 contract, authentication, validation and ownership regression tests."""
+
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -6,7 +7,7 @@ import jwt
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from one_many_api.config import Settings
@@ -65,7 +66,9 @@ def test_registration_login_and_me(client):
     assert registration.json()["token_type"] == "bearer"
     assert client.get("/api/v1/auth/me", headers=headers(registration)).json()["id"] == user["id"]
 
-    bad = client.post("/api/v1/auth/login", json={"email": "first@example.com", "password": "wrong"})
+    bad = client.post(
+        "/api/v1/auth/login", json={"email": "first@example.com", "password": "wrong"}
+    )
     assert bad.status_code == 401
     good = client.post(
         "/api/v1/auth/login",
@@ -87,7 +90,9 @@ def test_duplicate_registration_and_weak_password(client):
 
 def test_protected_routes_and_invalid_tokens(client):
     assert client.get("/api/v1/needs").status_code == 401
-    assert client.get("/api/v1/needs", headers={"Authorization": "Bearer invalid"}).status_code == 401
+    assert (
+        client.get("/api/v1/needs", headers={"Authorization": "Bearer invalid"}).status_code == 401
+    )
     past = datetime.now(UTC) - timedelta(minutes=2)
     expired = jwt.encode(
         {
@@ -101,7 +106,10 @@ def test_protected_routes_and_invalid_tokens(client):
         TEST_SECRET,
         algorithm="HS256",
     )
-    assert client.get("/api/v1/needs", headers={"Authorization": f"Bearer {expired}"}).status_code == 401
+    assert (
+        client.get("/api/v1/needs", headers={"Authorization": f"Bearer {expired}"}).status_code
+        == 401
+    )
 
 
 def test_needs_create_list_update_archive_and_dates(client):
@@ -137,7 +145,10 @@ def test_needs_create_list_update_archive_and_dates(client):
         f"/api/v1/needs/{need['id']}", headers=auth, json={"needed_until": "2026-11-01"}
     )
     assert invalid.status_code == 422
-    assert client.get(f"/api/v1/needs/{need['id']}", headers=auth).json()["needed_until"] == "2026-11-15"
+    assert (
+        client.get(f"/api/v1/needs/{need['id']}", headers=auth).json()["needed_until"]
+        == "2026-11-15"
+    )
 
     archived = client.delete(f"/api/v1/needs/{need['id']}", headers=auth)
     assert archived.status_code == 204
@@ -153,30 +164,50 @@ def test_cross_account_needs_are_not_exposed(client):
     first = headers(signup(client, "first@example.com"))
     second = headers(signup(client, "second@example.com"))
     created = client.post(
-        "/api/v1/needs", headers=first, json={"request_text": "Need a camera for a weekend workshop"}
+        "/api/v1/needs",
+        headers=first,
+        json={"request_text": "Need a camera for a weekend workshop"},
     )
     need_id = created.json()["id"]
     assert client.get("/api/v1/needs", headers=second).json()["total"] == 0
     assert client.get(f"/api/v1/needs/{need_id}", headers=second).status_code == 404
-    assert client.patch(
-        f"/api/v1/needs/{need_id}", headers=second, json={"status": "archived"}
-    ).status_code == 404
+    assert (
+        client.patch(
+            f"/api/v1/needs/{need_id}", headers=second, json={"status": "archived"}
+        ).status_code
+        == 404
+    )
     assert client.delete(f"/api/v1/needs/{need_id}", headers=second).status_code == 404
     assert client.get(f"/api/v1/needs/{need_id}", headers=first).status_code == 200
 
 
 def test_invalid_values_and_pagination(client):
     auth = headers(signup(client))
-    assert client.post("/api/v1/needs", headers=auth, json={"request_text": "short"}).status_code == 422
-    assert client.post(
-        "/api/v1/needs",
-        headers=auth,
-        json={"request_text": "Looking for a drill for two weekend tasks", "needed_from": "2027-01-10", "needed_until": "2027-01-09"},
-    ).status_code == 422
+    assert (
+        client.post("/api/v1/needs", headers=auth, json={"request_text": "short"}).status_code
+        == 422
+    )
+    assert (
+        client.post(
+            "/api/v1/needs",
+            headers=auth,
+            json={
+                "request_text": "Looking for a drill for two weekend tasks",
+                "needed_from": "2027-01-10",
+                "needed_until": "2027-01-09",
+            },
+        ).status_code
+        == 422
+    )
     for i in range(3):
-        assert client.post(
-            "/api/v1/needs", headers=auth, json={"request_text": f"Projector needed for workshop number {i}"}
-        ).status_code == 201
+        assert (
+            client.post(
+                "/api/v1/needs",
+                headers=auth,
+                json={"request_text": f"Projector needed for workshop number {i}"},
+            ).status_code
+            == 201
+        )
     result = client.get("/api/v1/needs?limit=2&offset=1", headers=auth).json()
     assert result["total"] == 3
     assert len(result["items"]) == 2

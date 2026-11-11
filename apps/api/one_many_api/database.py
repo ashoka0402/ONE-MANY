@@ -1,4 +1,5 @@
 """Session management is separate from migrations and API handlers."""
+
 from collections.abc import Generator
 from typing import Any
 

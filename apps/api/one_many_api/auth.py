@@ -1,4 +1,5 @@
 """Argon2 password hashes and signed, short-lived access tokens."""
+
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -68,7 +69,9 @@ def get_current_user(
             raise ValueError("Unexpected token type")
         user_id = UUID(payload["sub"])
     except (jwt.PyJWTError, ValueError, KeyError, TypeError):
-        raise HTTPException(401, "Invalid or expired token", headers={"WWW-Authenticate": "Bearer"}) from None
+        raise HTTPException(
+            401, "Invalid or expired token", headers={"WWW-Authenticate": "Bearer"}
+        ) from None
     user = db.get(User, user_id)
     if user is None:
         raise HTTPException(401, "Invalid or expired token", headers={"WWW-Authenticate": "Bearer"})
