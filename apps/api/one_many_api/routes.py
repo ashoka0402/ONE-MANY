@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 
 from one_many_api.auth import get_current_user, hash_password, issue_token, password_matches
 from one_many_api.database import get_db
-from one_many_api.models import Need, User
 from one_many_api.matching import normalize_area
+from one_many_api.models import Need, User
 from one_many_api.schemas import (
     AuthOut,
     LoginIn,

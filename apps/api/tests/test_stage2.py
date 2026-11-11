@@ -1,4 +1,5 @@
 """Stage 2 contract and privacy tests (model response fixtures, no fake production AI)."""
+
 from collections import Counter
 
 import httpx
@@ -78,10 +79,16 @@ def test_mocked_provider_transmits_schema_and_validates_payload(monkeypatch):
                 "candidates": [
                     {
                         "finishReason": "STOP",
-                        "content": {"parts": [{"text": (
-                            '{"asset_type":"pressure washer","purpose":"Clean driveway",'
-                            '"required_features":[],"excluded_features":[],"shareable":true}'
-                        )}]},
+                        "content": {
+                            "parts": [
+                                {
+                                    "text": (
+                                        '{"asset_type":"pressure washer","purpose":"Clean driveway",'
+                                        '"required_features":[],"excluded_features":[],"shareable":true}'
+                                    )
+                                }
+                            ]
+                        },
                     }
                 ]
             },
@@ -110,7 +117,8 @@ def test_no_key_or_invalid_provider_output_is_not_faked(monkeypatch):
 
     def bad_response(endpoint, **kwargs):
         return httpx.Response(
-            200, request=httpx.Request("POST", endpoint),
+            200,
+            request=httpx.Request("POST", endpoint),
             json={"candidates": [{"content": {"parts": [{"text": "{}"}]}}]},
         )
 
@@ -143,12 +151,8 @@ def test_optin_matching_without_leaking_member_data(client, monkeypatch):
 
     own = add_need(client, a, text=own_text, start="2026-11-15", end="2026-11-16")
     peer = add_need(client, b, text=peer_text, start="2026-11-20", end="2026-11-21")
-    hidden = add_need(
-        client, secret, text="Need a washer for our apartment courtyard", opt=False
-    )
-    elsewhere = add_need(
-        client, other, text="Need a washer for the garage", area="Hyderabad"
-    )
+    hidden = add_need(client, secret, text="Need a washer for our apartment courtyard", opt=False)
+    elsewhere = add_need(client, other, text="Need a washer for the garage", area="Hyderabad")
 
     # Private requests cannot be queried as candidate matches even after analysis.
     assert client.get(f"/api/v1/needs/{own}/matches", headers=a).status_code == 409
@@ -178,11 +182,14 @@ def test_optin_matching_without_leaking_member_data(client, monkeypatch):
     assert client.get(f"/api/v1/needs/{peer}/matches", headers=a).status_code == 404
 
     # Editing a text need invalidates cached AI extraction; never silently reuse it.
-    assert client.patch(
-        f"/api/v1/needs/{own}",
-        headers=a,
-        json={"request_text": "Need a different camera to film interviews"},
-    ).status_code == 200
+    assert (
+        client.patch(
+            f"/api/v1/needs/{own}",
+            headers=a,
+            json={"request_text": "Need a different camera to film interviews"},
+        ).status_code
+        == 200
+    )
     assert client.get(f"/api/v1/needs/{own}/matches", headers=a).status_code == 409
     assert client.get(f"/api/v1/needs/{own}", headers=a).json()["intent"] is None
 
@@ -208,16 +215,25 @@ def test_schedule_conflicts_and_exclusions_are_rejected(client, monkeypatch):
     monkeypatch.setattr("one_many_api.discovery_routes.extract_intent", extract)
     a, b, c, d = [member(client, f"m{i}@example.com") for i in range(4)]
     own = add_need(
-        client, a, text="Need a cordless drill for a DIY project",
-        start="2026-11-18", end="2026-11-19",
+        client,
+        a,
+        text="Need a cordless drill for a DIY project",
+        start="2026-11-18",
+        end="2026-11-19",
     )
     excluded = add_need(
-        client, b, text="Need a drill to assemble my patio furniture",
-        start="2026-11-22", end="2026-11-23",
+        client,
+        b,
+        text="Need a drill to assemble my patio furniture",
+        start="2026-11-22",
+        end="2026-11-23",
     )
     conflict = add_need(
-        client, c, text="Need a drill for the bathroom shelves",
-        start="2026-11-18", end="2026-11-19",
+        client,
+        c,
+        text="Need a drill for the bathroom shelves",
+        start="2026-11-18",
+        end="2026-11-19",
     )
     unknown = add_need(client, d, text="Need a drill for next month's repairs")
     for user, need in [(a, own), (b, excluded), (c, conflict), (d, unknown)]:
@@ -246,14 +262,15 @@ def test_analysis_failure_does_not_write_fiction(client, monkeypatch):
 
 def test_no_discovery_when_unshareable(client, monkeypatch):
     auth = member(client, "not-shareable@example.com")
-    target = add_need(
-        client, auth, text="Need a disposable roll of tissue paper for cleaning"
-    )
+    target = add_need(client, auth, text="Need a disposable roll of tissue paper for cleaning")
     monkeypatch.setattr(
         "one_many_api.discovery_routes.extract_intent",
         lambda text, settings: AIIntent(
-            asset_type="tissue paper", purpose="Disposable cleaning material",
-            required_features=[], excluded_features=[], shareable=False,
+            asset_type="tissue paper",
+            purpose="Disposable cleaning material",
+            required_features=[],
+            excluded_features=[],
+            shareable=False,
         ),
     )
     assert client.post(f"/api/v1/needs/{target}/analyze", headers=auth).status_code == 200

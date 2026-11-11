@@ -9,9 +9,9 @@ from starlette.exceptions import HTTPException
 
 from one_many_api.config import Settings
 from one_many_api.database import build_session_factory
+from one_many_api.discovery_routes import discovery_router
 from one_many_api.logging import configure_logging
 from one_many_api.routes import router
-from one_many_api.discovery_routes import discovery_router
 
 
 def create_app(settings: Settings | None = None) -> CORSMiddleware:

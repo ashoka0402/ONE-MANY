@@ -1,4 +1,5 @@
 """Actual Gemini structured extraction. No fake/offline keyword fallback."""
+
 import hashlib
 import json
 import logging

@@ -1,4 +1,5 @@
 """Opt-in intent extraction and owner-only anonymous matching discovery."""
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
