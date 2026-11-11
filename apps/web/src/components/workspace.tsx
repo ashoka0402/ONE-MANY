@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -93,10 +93,6 @@ export function Workspace() {
     }
   }, []);
 
-  useEffect(() => {
-    if (token) void refreshNeeds(token);
-  }, [token, refreshNeeds]);
-
   async function handleAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setAuthBusy(true);
@@ -112,6 +108,7 @@ export function Workspace() {
       );
       setUser(response.user);
       setToken(response.access_token);
+      void refreshNeeds(response.access_token);
       setPassword("");
       setNotice("Your private workspace is ready.");
     } catch (err) {
@@ -257,7 +254,7 @@ export function Workspace() {
         <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">STAGE 1 · LIVE DATA</span></header>
         <main id="main" className="work-main">
           <section className="work-intro">
-            <div><p className="eyebrow"><span className="status-dot" /> THE FIRST STEP</p><h1>What's on your<br /><em>mind today?</em></h1><p>Describe what you need. Your requests are private until matching is introduced.</p></div>
+            <div><p className="eyebrow"><span className="status-dot" /> THE FIRST STEP</p><h1>What&apos;s on your<br /><em>mind today?</em></h1><p>Describe what you need. Your requests are private until matching is introduced.</p></div>
             <div className="work-count"><strong>{openCount}</strong><span>OPEN NEEDS</span></div>
           </section>
           {error && <p className="work-error" role="alert">{error}</p>}
