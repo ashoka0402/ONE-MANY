@@ -25,3 +25,5 @@ Authentication, business models, migrations, AI calls/matching, Channel3, PayPal
 ## Stage 0 recovery — interrupted Codex run
 
 Restore required tsParticles, Motion and Tailwind PostCSS packages; use the official Aceternity Bento Grid example adapted for the existing design system. Keep the Next.js links as semantic links rather than using Base UI Button's unsupported `asChild` syntax. Import brand.css after Tailwind globals. Add a CI workflow to regenerate the dependency lockfile once in GitHub Actions, then validate frontend, backend and Compose. Local npm registry and Docker are unavailable in the editing environment; any unrun check must remain explicitly unverified until CI confirms it.
+
+The one-time CI lockfile repair succeeded. The verification workflow now operates with read-only repository permission and validates the committed lockfile with npm ci. It also probes a real PostgreSQL instance on the GitHub runner; consult the latest workflow status for runtime verification.

@@ -1,6 +1,6 @@
 # Status
 
-Current stage: **0 — Foundation and design system**. Stage 0 source-level repairs committed November 12, 2026 (IST). Stage 1 has not started.
+Current stage: **0 — Foundation and design system COMPLETE at the code/build/test level** (November 12, 2026 IST). Stage 1 has not started.
 
 ## Implemented
 
@@ -19,7 +19,17 @@ Authentication, persisted domain models, schema migrations, real matching, AI ca
 
 ## Verification
 
-The earlier Codex check was interrupted before final results. This editing environment cannot reach npm/PyPI or the Docker daemon, so it has **not** locally executed the Next.js production build or FastAPI tests. The GitHub Actions workflow `.github/workflows/verify-stage0.yml` is the verification source: it reconciles the npm lockfile when needed, then attempts frontend lint/typecheck/build, Python tests/lint, and Compose validation. Inspect the latest Actions run for pass/fail status. Do **not** claim all checks passed without an actual successful run.
+GitHub Actions run [43083023787](https://github.com/ashoka0402/ONE-MANY/actions/runs/43083023787) completed successfully against commit `813054b`, proving:
+
+- `npm ci --prefix apps/web` — passed using the regenerated, committed lockfile.
+- `npm run lint:web` — passed.
+- `npm run typecheck:web` — passed.
+- `npm run build:web` — passed (both `/` and `/app` built).
+- `python -m pytest -q apps/api/tests` — **15 passed**, one upstream Starlette/httpx deprecation warning.
+- `python -m ruff check apps/api` — passed.
+- `docker compose config --quiet` — passed.
+
+CI was subsequently hardened to read-only repository permissions and adds a live PostgreSQL startup/connection smoke test. Check the latest workflow run for that additional database verification. The web build and tests were executed on GitHub's runner, not this editing container.
 
 ## Important next-stage cautions
 
