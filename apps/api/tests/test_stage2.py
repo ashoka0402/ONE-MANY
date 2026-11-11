@@ -84,7 +84,7 @@ def test_mocked_provider_transmits_schema_and_validates_payload(monkeypatch):
                                 {
                                     "text": (
                                         '{"asset_type":"pressure washer",'
-                                    '"purpose":"Clean driveway",'
+                                        '"purpose":"Clean driveway",'
                                         '"required_features":[],"excluded_features":[],"shareable":true}'
                                     )
                                 }
