@@ -1,6 +1,6 @@
 # Status
 
-Current stage: **Stage 1 — Identity, needs and persistence**.
+Current stage: **Stage 1 — Identity, needs and persistence — COMPLETE at the automated test/build level**. Stage 2 has not started.
 
 ## Implemented in Stage 1
 
@@ -17,7 +17,7 @@ AI intent extraction or matching, Channel3 products, purchase groups, PayPal san
 
 ## Verification
 
-Stage 0 was fully green in [GitHub Actions](https://github.com/ashoka0402/ONE-MANY/actions/runs/43083392264). Stage 1 checks must be verified against its newly committed workflow run before reporting complete. This editor cannot independently perform a local Postgres-backed browser test; CI provides controlled API/database verification.
+Stage 1 checks passed in [GitHub Actions run 43086387692](https://github.com/ashoka0402/ONE-MANY/actions/runs/43086387692): npm dependency installation, ESLint, TypeScript, Next.js production build, Python backend tests (**22 passed**), Ruff lint, PostgreSQL 17 container startup, Alembic migration `20261112_01`, a real Postgres-backed register/create/list API smoke test, and Compose validation. An initial lint failure was addressed before this successful run; the one-time autoformatter was removed from permanent CI. After cleanup, CI runs with read-only permissions. This editor cannot verify visual rendering in a browser; that remains a manual QA action, not a claim.
 
 ## Known limitations
 

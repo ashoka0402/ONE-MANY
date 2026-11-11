@@ -1,6 +1,6 @@
 # Roadmap
 
-Current stage: **1 — Identity, needs and persistence** (implementation in review). Hackathon deadline: **November 13, 2026 at 01:30 IST**.
+Current stage: **1 — Identity, needs and persistence** (implemented and automated checks passed; Stage 2 awaits authorization). Hackathon deadline: **November 13, 2026 at 01:30 IST**.
 
 | Stage | Scope | Acceptance criteria |
 | --- | --- | --- |
