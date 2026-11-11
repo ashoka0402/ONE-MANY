@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Index, String, Text, Uuid, func
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Index, JSON, String, Text, Uuid, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -42,6 +42,8 @@ class Need(Base):
     )
     request_text: Mapped[str] = mapped_column(Text, nullable=False)
     location_label: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    location_key: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    discoverable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     needed_from: Mapped[date | None] = mapped_column(Date, nullable=True)
     needed_until: Mapped[date | None] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(
@@ -54,3 +56,29 @@ class Need(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
     owner: Mapped[User] = relationship(back_populates="needs")
+    intent: Mapped["NeedIntent | None"] = relationship(
+        back_populates="need", uselist=False, cascade="all, delete-orphan"
+    )
+
+
+class NeedIntent(Base):
+    """A cached, strictly validated real provider extraction for one owned need."""
+
+    __tablename__ = "need_intents"
+    __table_args__ = (Index("ix_need_intents_asset_key", "asset_key"),)
+
+    need_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("needs.id", ondelete="CASCADE"), primary_key=True
+    )
+    asset_type: Mapped[str] = mapped_column(String(120), nullable=False)
+    asset_key: Mapped[str] = mapped_column(String(120), nullable=False)
+    purpose: Mapped[str] = mapped_column(String(240), nullable=False)
+    required_features: Mapped[list[str]] = mapped_column(JSON, nullable=False)
+    excluded_features: Mapped[list[str]] = mapped_column(JSON, nullable=False)
+    shareable: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    model_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    analyzed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    need: Mapped[Need] = relationship(back_populates="intent")
