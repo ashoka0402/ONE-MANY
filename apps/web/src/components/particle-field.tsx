@@ -1,8 +1,9 @@
-﻿"use client";
-import { useEffect, useState } from "react";
-import Particles, { initParticlesEngine } from "@tsparticles/react";
+"use client";
+
+import Particles, { ParticlesProvider } from "@tsparticles/react";
+import type { Engine, ISourceOptions } from "@tsparticles/engine";
 import { loadSlim } from "@tsparticles/slim";
-import type { ISourceOptions } from "@tsparticles/engine";
+
 const options: ISourceOptions = {
   fullScreen: { enable: false },
   fpsLimit: 30,
@@ -19,15 +20,16 @@ const options: ISourceOptions = {
   },
   interactivity: { events: { onClick: { enable: false }, onHover: { enable: false } } },
 };
-// Share initialization across mounts; the decorative canvas never controls page readiness.
-let engineReady: Promise<void> | undefined;
+
+// tsParticles v4 uses ParticlesProvider; initParticlesEngine was removed from its React export.
+const initializeParticles = async (engine: Engine): Promise<void> => {
+  await loadSlim(engine);
+};
+
 export default function ParticleField() {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    let active = true;
-    engineReady ??= initParticlesEngine(async (engine) => { await loadSlim(engine); });
-    engineReady.then(() => { if (active) setReady(true); }).catch(() => { /* The static hero remains usable if decoration cannot initialize. */ });
-    return () => { active = false; };
-  }, []);
-  return ready ? <Particles id="shared-possibilities" options={options} /> : null;
+  return (
+    <ParticlesProvider init={initializeParticles}>
+      <Particles id="shared-possibilities" options={options} />
+    </ParticlesProvider>
+  );
 }
