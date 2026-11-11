@@ -3,7 +3,19 @@
 from datetime import date, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Index, JSON, String, Text, Uuid, func
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    Uuid,
+    func,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -43,7 +55,9 @@ class Need(Base):
     request_text: Mapped[str] = mapped_column(Text, nullable=False)
     location_label: Mapped[str | None] = mapped_column(String(120), nullable=True)
     location_key: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    discoverable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    discoverable: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
     needed_from: Mapped[date | None] = mapped_column(Date, nullable=True)
     needed_until: Mapped[date | None] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(
