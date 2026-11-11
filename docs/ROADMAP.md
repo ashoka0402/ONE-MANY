@@ -1,6 +1,6 @@
 # Roadmap
 
-Current stage: **2 — AI interpretation and opt-in anonymous demand matching**. Stage 1 is verified; Stage 2 implementation is undergoing CI checks. Hackathon deadline: **November 13, 2026 at 01:30 IST**.
+Current stage: **2 — AI interpretation and opt-in anonymous demand matching**. Automated tests, frontend build and real PostgreSQL migration/matching smoke passed; Stage 3 awaits authorization. Hackathon deadline: **November 13, 2026 at 01:30 IST**.
 
 | Stage | Scope | Acceptance criteria |
 | --- | --- | --- |

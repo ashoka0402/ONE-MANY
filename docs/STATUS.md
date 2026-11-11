@@ -1,6 +1,6 @@
 # Stage 2 — Implementation status
 
-Current stage: **Stage 2 — AI Extraction & Opt-in Demand Matching**. Stages 0 and 1 were validated through GitHub Actions; Stage 2 requires its new CI run before claiming verified completion.
+Current stage: **Stage 2 — AI Extraction & Opt-in Demand Matching — COMPLETE at the automated test/build level**. Stage 3 has not started.
 
 ## Implemented in source
 
@@ -11,11 +11,11 @@ Current stage: **Stage 2 — AI Extraction & Opt-in Demand Matching**. Stages 0 
 - Conservative matching by exact model-normalized asset, explicit consent, same self-reported area, different owner, feature constraints and non-overlapping complete date windows.
 - Anonymous aggregate count API, documented feasibility caveats, client UI controls.
 - Regression tests for privacy, date overlap, feature exclusions, missing/invalid provider response, and cache invalidation.
-- CI: frontend lint/build, backend tests/Ruff, actual PostgreSQL migration and owner-scoped matching smoke.
+- CI: frontend lint/build, backend tests/Ruff, actual PostgreSQL migration and owner-scoped matching smoke — all passed in [run 43089572828](https://github.com/ashoka0402/ONE-MANY/actions/runs/43089572828). There are **28 passing backend tests** (Stage 1 and Stage 2 combined).
 
 ## Still pending
 
-An actual Gemini request must be run by a user who has provisioned a valid API key; CI uses a deterministic provider fixture and does **not** verify third-party account credentials. Browser screenshots/interactions are not captured by CI. Product catalog, shopping groups, contributions, PayPal, Bryntum, AG Grid and deployment belong to later stages.
+An actual Gemini request must be run by a user who has provisioned a valid API key; CI uses a deterministic provider fixture and does **not** verify third-party account credentials. Browser screenshots/interactions are not captured by CI. The temporary CI formatter was removed, and permanent verification uses read-only repository permissions. Product catalog, shopping groups, contributions, PayPal, Bryntum, AG Grid and deployment belong to later stages.
 
 ## Safety limitations
 
