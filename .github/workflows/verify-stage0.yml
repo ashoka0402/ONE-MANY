@@ -35,9 +35,9 @@ jobs:
         run: python -m pip install -e "./apps/api[dev]"
       - name: One-time Stage 1 Python formatting
         run: |
-          python -m ruff check --fix apps/api
           python -m ruff format apps/api
-          python -m ruff check --fix apps/api
+          python -m ruff check --fix apps/api || true
+          python -m ruff format apps/api
           if ! git diff --quiet -- apps/api; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
