@@ -51,11 +51,24 @@ class AuthOut(BaseModel):
     user: UserOut
 
 
+class IntentOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    asset_type: str
+    purpose: str
+    required_features: list[str]
+    excluded_features: list[str]
+    shareable: bool
+    model_name: str
+    analyzed_at: datetime
+
+
 class NeedFields(BaseModel):
     request_text: str = Field(min_length=12, max_length=2000)
     location_label: str | None = Field(default=None, max_length=120)
     needed_from: date | None = None
     needed_until: date | None = None
+    discoverable: bool = False
 
     @field_validator("request_text")
     @classmethod
@@ -87,6 +100,7 @@ class NeedUpdate(BaseModel):
     needed_from: date | None = None
     needed_until: date | None = None
     status: Literal["open", "archived"] | None = None
+    discoverable: bool | None = None
 
     @model_validator(mode="after")
     def validate_changes(self) -> "NeedUpdate":
@@ -96,6 +110,8 @@ class NeedUpdate(BaseModel):
             self.request_text = self.request_text.strip()
         if "status" in self.model_fields_set and self.status is None:
             raise ValueError("status cannot be null")
+        if "discoverable" in self.model_fields_set and self.discoverable is None:
+            raise ValueError("discoverable cannot be null")
         if self.location_label is not None:
             self.location_label = self.location_label.strip() or None
         return self
@@ -108,6 +124,7 @@ class NeedOut(NeedFields):
     status: Literal["open", "archived"]
     created_at: datetime
     updated_at: datetime
+    intent: IntentOut | None = None
 
 
 class NeedsPage(BaseModel):

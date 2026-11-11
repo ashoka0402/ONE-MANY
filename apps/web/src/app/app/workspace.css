@@ -84,3 +84,27 @@
 @media(max-width:760px) { .work-auth-layout { grid-template-columns:1fr; } .work-auth-story { min-height:260px; padding:24px; } .work-auth-copy { padding-top:15px; } .work-auth-copy h1 { font-size:43px; } .work-auth-copy p { font-size:13px; } .work-orbit,.work-footnote { display:none; } .work-auth-panel { padding:40px 24px; align-items:start; } .work-back { margin-bottom:35px; } .work-auth-heading h2 { font-size:36px; } .work-main { padding-top:34px; } .work-intro { align-items:flex-start; } .work-intro h1 { letter-spacing:-1.5px; } .work-count { min-width:90px; padding:11px; } .work-count strong { font-size:30px; } .work-create-card,.work-list-card { padding:20px; } .work-next { padding:20px; } .work-sidebar-profile { margin-top:12px; padding:12px 0 9px; } }
 @media(max-width:480px) { .work-date-row { grid-template-columns:1fr; } .work-count { display:none; } .work-next-icon { display:none; } }
 @media(prefers-reduced-motion:reduce) { .work-spinner { animation:none; } .work-primary { transition:none; } }
+
+
+/* Stage 2: privacy-aware AI interpretation and discoverable match candidates. */
+.work-consent { display:flex!important; flex-direction:row!important; align-items:flex-start; gap:12px!important; padding:15px; border:1px solid #d5dfca; background:#f3f8ed; border-radius:10px; cursor:pointer; }
+.work-consent input,.work-discovery-toggle input { width:17px!important; height:17px; flex-shrink:0; margin:2px 0 0; accent-color:#527b2c; cursor:pointer; }
+.work-consent span { display:flex; flex-direction:column; gap:5px; }
+.work-consent strong { font-size:12px; font-weight:650; }
+.work-consent small { font-size:11px; line-height:1.55; color:#58704d; font-weight:400; }
+.work-need-analysis { margin-top:15px; }
+.work-intent-card { display:flex; flex-direction:column; gap:6px; padding:13px 15px; border:1px solid #d7e3c9; background:#f0f6e9; border-radius:9px; }
+.work-intent-card strong { font-size:16px; color:#263e27; text-transform:capitalize; }
+.work-intent-card p { font-size:12px; color:#566952; line-height:1.5; }
+.work-intent-card small { display:block; font-size:10px; color:#58714f; line-height:1.55; }
+.work-intent-label { font-size:9px; font-weight:750; display:flex; gap:7px; align-items:center; color:#57743f; letter-spacing:1px; }
+.work-unprocessed { font-size:11px; color:#7c8972; padding:12px; border:1px dashed #d9e2d5; border-radius:8px; }
+.work-match-actions { margin-top:15px; display:flex; flex-direction:column; gap:12px; }
+.work-discovery-toggle { display:flex; align-items:center; gap:8px; font-size:11px; color:#536b47; font-weight:600; cursor:pointer; }
+.work-action-buttons { display:flex; flex-wrap:wrap; gap:8px; }
+.work-action-buttons button { display:inline-flex; align-items:center; gap:7px; padding:9px 11px; border-radius:7px; background:#e3edda; color:#375d2a; border:1px solid #d2e3c6; font-size:11px; font-weight:650; cursor:pointer; }
+.work-action-buttons button:hover:not(:disabled) { background:#cfe6bd; }
+.work-action-buttons button:disabled { opacity:.48; cursor:not-allowed; }
+.work-match-result { display:flex; flex-direction:column; gap:8px; background:#eef6e5; border:1px solid #cfe2bd; border-radius:9px; padding:15px; margin-top:14px; }
+.work-match-result strong { color:#2e5121; font-size:18px; }
+.work-match-result span,.work-match-result p,.work-match-result small { color:#58734b; font-size:11px; line-height:1.6; }

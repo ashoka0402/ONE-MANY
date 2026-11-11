@@ -16,10 +16,28 @@ import {
   ShieldCheck,
   Sparkles,
   Users,
+  Search,
 } from "lucide-react";
 
 type Member = { id: string; email: string; display_name: string };
 type AuthResponse = { access_token: string; expires_in: number; user: Member };
+type Intent = {
+  asset_type: string;
+  purpose: string;
+  required_features: string[];
+  excluded_features: string[];
+  shareable: boolean;
+  model_name: string;
+};
+type MatchSummary = {
+  need_id: string;
+  asset_type: string;
+  potential_members: number;
+  non_overlapping_schedules: number;
+  scheduling_confirmation_required: number;
+  candidates_limited: boolean;
+  explanation: string;
+};
 type Need = {
   id: string;
   request_text: string;
@@ -27,6 +45,8 @@ type Need = {
   needed_from: string | null;
   needed_until: string | null;
   status: "open" | "archived";
+  discoverable: boolean;
+  intent: Intent | null;
   created_at: string;
 };
 type NeedsPage = { items: Need[]; total: number };
@@ -77,6 +97,10 @@ export function Workspace() {
   const [locationLabel, setLocationLabel] = useState("");
   const [neededFrom, setNeededFrom] = useState("");
   const [neededUntil, setNeededUntil] = useState("");
+  const [discoveryOptIn, setDiscoveryOptIn] = useState(false);
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
+  const [matchingId, setMatchingId] = useState<string | null>(null);
+  const [matchResults, setMatchResults] = useState<Record<string, MatchSummary>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
 
@@ -136,13 +160,15 @@ export function Workspace() {
           location_label: locationLabel || null,
           needed_from: neededFrom || null,
           needed_until: neededUntil || null,
+          discoverable: discoveryOptIn,
         }),
       });
       setRequestText("");
       setLocationLabel("");
       setNeededFrom("");
       setNeededUntil("");
-      setNotice("Need saved. AI matching will be added in Stage 2.");
+      setDiscoveryOptIn(false);
+      setNotice("Need saved. Analyze it with Gemini when ready.");
       await refreshNeeds(token);
     } catch (err) {
       setError(messageFrom(err));
@@ -162,6 +188,7 @@ export function Workspace() {
         body: JSON.stringify(changes),
       });
       setEditingId(null);
+      setMatchResults(current => { const next = { ...current }; delete next[id]; return next; });
       setNotice("Your need has been updated.");
       await refreshNeeds(token);
     } catch (err) {
@@ -171,10 +198,45 @@ export function Workspace() {
     }
   }
 
+  async function analyzeNeed(id: string) {
+    if (!token) return;
+    setAnalyzingId(id);
+    setError("");
+    setNotice("");
+    try {
+      const intent = await api<Intent>(`/needs/${id}/analyze`, token, { method: "POST" });
+      setMatchResults(current => { const next = { ...current }; delete next[id]; return next; });
+      setNotice(intent.shareable
+        ? `Gemini identified a reusable asset: ${intent.asset_type}. You can now check compatible needs.`
+        : "Gemini classified this request as unsuitable for shared physical ownership.");
+      await refreshNeeds(token);
+    } catch (err) {
+      setError(messageFrom(err) + " Verify GEMINI_API_KEY is configured on the API server.");
+    } finally {
+      setAnalyzingId(null);
+    }
+  }
+
+  async function findMatchesFor(id: string) {
+    if (!token) return;
+    setMatchingId(id);
+    setError("");
+    setNotice("");
+    try {
+      const result = await api<MatchSummary>(`/needs/${id}/matches`, token);
+      setMatchResults(current => ({ ...current, [id]: result }));
+    } catch (err) {
+      setError(messageFrom(err));
+    } finally {
+      setMatchingId(null);
+    }
+  }
+
   function signOut() {
     setToken(null);
     setUser(null);
     setNeeds([]);
+    setMatchResults({});
     setEditingId(null);
     setError("");
     setNotice("");
@@ -194,7 +256,7 @@ export function Workspace() {
               <span className="work-orbit-dot a" /><span className="work-orbit-dot b" /><span className="work-orbit-dot c" />
             </div>
           </div>
-          <span className="work-footnote">STAGE 1 · PRIVATE NEEDS, REAL ACCOUNTS</span>
+          <span className="work-footnote">STAGE 2 · AI INTENT + PRIVATE MATCHING</span>
         </section>
         <section className="work-auth-panel">
           <div className="work-auth-card">
@@ -251,10 +313,10 @@ export function Workspace() {
         <button className="work-logout" type="button" onClick={signOut}><LogOut size={16} /> Sign out</button>
       </aside>
       <div className="app-main">
-        <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">STAGE 1 · LIVE DATA</span></header>
+        <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">STAGE 2 · LIVE MATCHING</span></header>
         <main id="main" className="work-main">
           <section className="work-intro">
-            <div><p className="eyebrow"><span className="status-dot" /> THE FIRST STEP</p><h1>What&apos;s on your<br /><em>mind today?</em></h1><p>Describe what you need. Your requests are private until matching is introduced.</p></div>
+            <div><p className="eyebrow"><span className="status-dot" /> THE FIRST STEP</p><h1>What&apos;s on your<br /><em>mind today?</em></h1><p>Describe what you need. AI can identify reusable items, then find possible shared ownership opportunities with your consent.</p></div>
             <div className="work-count"><strong>{openCount}</strong><span>OPEN NEEDS</span></div>
           </section>
           {error && <p className="work-error" role="alert">{error}</p>}
@@ -273,8 +335,12 @@ export function Workspace() {
                   <label>From (optional)<input type="date" value={neededFrom} onChange={event => setNeededFrom(event.target.value)} /></label>
                   <label>Until (optional)<input type="date" value={neededUntil} onChange={event => setNeededUntil(event.target.value)} min={neededFrom || undefined} /></label>
                 </div>
+                <label className="work-consent">
+                  <input type="checkbox" checked={discoveryOptIn} onChange={event => setDiscoveryOptIn(event.target.checked)} />
+                  <span><strong>Join anonymous community discovery</strong><small>Allow eligible users in the same self-reported area to see anonymous match counts, not your message or identity. You may turn this off later.</small></span>
+                </label>
                 <button className="work-primary" type="submit" disabled={needBusy}>{needBusy ? <LoaderCircle size={17} className="work-spinner" /> : <Plus size={17} />} Save this need</button>
-                <p className="work-helper"><ShieldCheck size={14} /> Only you can see or edit your needs during Stage 1.</p>
+                <p className="work-helper"><ShieldCheck size={14} /> Your full request stays private. AI analysis is only sent to Gemini when you select Analyze.</p>
               </form>
             </section>
             <section className="work-list-card" aria-labelledby="list-title">
@@ -292,10 +358,53 @@ export function Workspace() {
                           <div><button type="submit" disabled={needBusy}>Save</button><button type="button" onClick={() => setEditingId(null)}>Cancel</button></div>
                         </form>
                       ) : <p className="work-need-text">{need.request_text}</p>}
+                      <div className="work-need-analysis">
+                        {need.intent ? (
+                          <div className="work-intent-card">
+                            <div className="work-intent-label"><Sparkles size={13} /> GEMINI EXTRACTED · {need.intent.model_name}</div>
+                            <strong>{need.intent.asset_type}</strong>
+                            <p>{need.intent.purpose}</p>
+                            {need.intent.required_features.length > 0 && <small>Required: {need.intent.required_features.join(", ")}</small>}
+                            {need.intent.excluded_features.length > 0 && <small>Excluded: {need.intent.excluded_features.join(", ")}</small>}
+                            <small>{need.intent.shareable ? "Potentially reusable · awaiting real product validation" : "Not a suitable shared physical asset"}</small>
+                          </div>
+                        ) : <p className="work-unprocessed">AI extraction not run for this need yet.</p>}
+                      </div>
                       <div className="work-need-details">
                         {need.location_label && <span>{need.location_label}</span>}
                         {need.needed_from && <span>{need.needed_from}{need.needed_until ? ` to ${need.needed_until}` : ""}</span>}
                       </div>
+                      {need.status === "open" && (
+                        <div className="work-match-actions">
+                          <label className="work-discovery-toggle">
+                            <input
+                              type="checkbox"
+                              checked={need.discoverable}
+                              disabled={needBusy}
+                              onChange={event => void updateNeed(need.id, { discoverable: event.target.checked })}
+                            />
+                            <span>{need.discoverable ? "Discoverable to anonymous matching" : "Private — enable matching"}</span>
+                          </label>
+                          <div className="work-action-buttons">
+                            <button type="button" disabled={analyzingId !== null || needBusy} onClick={() => void analyzeNeed(need.id)}>
+                              {analyzingId === need.id ? <LoaderCircle size={14} className="work-spinner" /> : <Sparkles size={14} />}
+                              {need.intent ? "Recheck AI extraction" : "Analyze with Gemini"}
+                            </button>
+                            <button type="button" disabled={!need.intent?.shareable || !need.discoverable || !need.location_label || matchingId !== null} onClick={() => void findMatchesFor(need.id)}>
+                              {matchingId === need.id ? <LoaderCircle size={14} className="work-spinner" /> : <Search size={14} />}
+                              Find potential matches
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {matchResults[need.id] && (
+                        <div className="work-match-result" role="status">
+                          <strong>{matchResults[need.id].potential_members} potential {matchResults[need.id].potential_members === 1 ? "member" : "members"}</strong>
+                          <span>{matchResults[need.id].non_overlapping_schedules} have distinct date windows; {matchResults[need.id].scheduling_confirmation_required} need scheduling confirmation.</span>
+                          <p>{matchResults[need.id].explanation}</p>
+                          {matchResults[need.id].candidates_limited && <small>Search limit reached; there may be additional opportunities.</small>}
+                        </div>
+                      )}
                       <div className="work-need-actions">
                         <button disabled={needBusy} onClick={() => { setEditingId(need.id); setEditingText(need.request_text); }}><Pencil size={14} /> Edit</button>
                         <button disabled={needBusy} onClick={() => void updateNeed(need.id, { status: need.status === "open" ? "archived" : "open" })}>{need.status === "open" ? "Archive" : "Reopen"}</button>
@@ -307,7 +416,7 @@ export function Workspace() {
             </section>
           </div>
           <section id="next" className="work-next">
-            <div><span className="work-kicker">COMING IN THE NEXT STAGES</span><h2>Your needs become shared possibilities.</h2><p>AI demand matching, Channel3 products, PayPal contributions, and Bryntum scheduling are not connected yet.</p></div>
+            <div><span className="work-kicker">STAGE 2 · INTERPRET AND DISCOVER</span><h2>Different needs. A possible shared solution.</h2><p>Gemini extracts reusable asset requirements; deterministic rules identify potential neighbors without exposing their identities. Actual products, prices, PayPal payments and scheduling arrive in later stages.</p></div>
             <div className="work-next-icon" aria-hidden="true"><Users size={35} /></div>
           </section>
         </main>

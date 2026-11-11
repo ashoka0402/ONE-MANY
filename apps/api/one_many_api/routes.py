@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from one_many_api.auth import get_current_user, hash_password, issue_token, password_matches
 from one_many_api.database import get_db
 from one_many_api.models import Need, User
+from one_many_api.matching import normalize_area
 from one_many_api.schemas import (
     AuthOut,
     LoginIn,
@@ -69,6 +70,7 @@ def create_need(
     db: Session = Depends(get_db),
 ):
     need = Need(owner_id=user.id, **payload.model_dump())
+    need.location_key = normalize_area(need.location_label)
     db.add(need)
     db.commit()
     db.refresh(need)
@@ -131,8 +133,12 @@ def update_need(
     proposed_until = updates.get("needed_until", need.needed_until)
     if proposed_from and proposed_until and proposed_until < proposed_from:
         raise HTTPException(422, "needed_until cannot be before needed_from")
+    if "request_text" in updates and updates["request_text"] != need.request_text:
+        need.intent = None  # cached extraction is no longer valid
     for field, value in updates.items():
         setattr(need, field, value)
+    if "location_label" in updates:
+        need.location_key = normalize_area(need.location_label)
     db.commit()
     db.refresh(need)
     return need
@@ -146,4 +152,5 @@ def archive_need(
 ):
     need = _owned_need(db, user, need_id)
     need.status = "archived"
+    need.discoverable = False
     db.commit()

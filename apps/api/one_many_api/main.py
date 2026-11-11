@@ -11,6 +11,7 @@ from one_many_api.config import Settings
 from one_many_api.database import build_session_factory
 from one_many_api.logging import configure_logging
 from one_many_api.routes import router
+from one_many_api.discovery_routes import discovery_router
 
 
 def create_app(settings: Settings | None = None) -> CORSMiddleware:
@@ -32,6 +33,7 @@ def create_app(settings: Settings | None = None) -> CORSMiddleware:
     app = FastAPI(title="ONE / MANY API", version="0.1.0", lifespan=lifespan)
     app.state.settings = settings
     app.include_router(router)
+    app.include_router(discovery_router)
 
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException) -> JSONResponse:

@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     database_url: SecretStr | None = None
     auth_secret: SecretStr | None = None
     access_token_minutes: int = Field(default=60, ge=5, le=1440)
+    gemini_api_key: SecretStr | None = None
+    gemini_model: str = Field(default="gemini-2.5-flash", pattern=r"^gemini-[a-zA-Z0-9._-]+$")
+    gemini_timeout_seconds: float = Field(default=12.0, ge=2, le=30)
+    match_candidate_limit: int = Field(default=300, ge=10, le=2000)
 
     @model_validator(mode="after")
     def credentials_for_production(self) -> "Settings":

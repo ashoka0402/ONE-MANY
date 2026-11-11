@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   checks:
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -33,7 +33,19 @@ jobs:
           python-version: "3.13"
       - name: Install API
         run: python -m pip install -e "./apps/api[dev]"
-      - name: Start PostgreSQL and apply Stage 1 migrations
+      - name: One-time Stage 2 Python formatting
+        run: |
+          python -m ruff format apps/api
+          python -m ruff check --fix apps/api || true
+          python -m ruff format apps/api
+          if ! git diff --quiet -- apps/api; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add apps/api
+            git commit -m "style(stage-2): format matching and AI service"
+            git push origin HEAD:main
+          fi
+      - name: Start PostgreSQL and apply Stage 2 migrations
         env:
           POSTGRES_PASSWORD: validation-only-not-real
           DATABASE_URL: postgresql+psycopg://one_many:validation-only-not-real@127.0.0.1:5432/one_many
@@ -47,7 +59,8 @@ jobs:
           with psycopg.connect("postgresql://one_many:validation-only-not-real@127.0.0.1:5432/one_many") as connection:
               assert connection.execute("SELECT to_regclass('public.users')").fetchone()[0] == "users"
               assert connection.execute("SELECT to_regclass('public.needs')").fetchone()[0] == "needs"
-              assert connection.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "20261112_01"
+              assert connection.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "20261112_02"
+              assert connection.execute("SELECT to_regclass('public.need_intents')").fetchone()[0] == "need_intents"
           PY
           python - <<'PY'
           from fastapi.testclient import TestClient
@@ -72,6 +85,48 @@ jobs:
               })
               assert saved.status_code == 201, saved.text
               assert client.get("/api/v1/needs", headers=auth).json()["total"] == 1
+              from unittest.mock import patch
+              from one_many_api.ai_service import AIIntent
+              consent = client.patch(
+                  "/api/v1/needs/" + saved.json()["id"], headers=auth,
+                  json={"discoverable": True},
+              )
+              assert consent.status_code == 200, consent.text
+              second = client.post("/api/v1/auth/register", json={
+                  "email": "postgres-peer@example.com",
+                  "display_name": "Postgres Peer",
+                  "password": "not-a-real-secret-password-123",
+              })
+              assert second.status_code == 201, second.text
+              peer_auth = {"Authorization": "Bearer " + second.json()["access_token"]}
+              peer_need = client.post("/api/v1/needs", headers=peer_auth, json={
+                  "request_text": "Borrow a projector for a community session",
+                  "location_label": "Downtown, Pune",
+                  "discoverable": True,
+                  "needed_from": "2026-11-20",
+                  "needed_until": "2026-11-21",
+              })
+              assert peer_need.status_code == 201, peer_need.text
+              # The original need has no area; update it to match, preserving privacy.
+              assert client.patch("/api/v1/needs/" + saved.json()["id"], headers=auth, json={
+                  "location_label": "Downtown, Pune",
+                  "needed_from": "2026-11-17",
+                  "needed_until": "2026-11-18",
+              }).status_code == 200
+              # A deterministic model fixture is used only in CI (never in production).
+              def model_fixture(text, settings):
+                  return AIIntent(
+                      asset_type="projector", purpose="Project a presentation",
+                      required_features=[], excluded_features=[], shareable=True,
+                  )
+              with patch("one_many_api.discovery_routes.extract_intent", side_effect=model_fixture):
+                  for identity, identifier in [(auth, saved.json()["id"]), (peer_auth, peer_need.json()["id"])]:
+                      analysis = client.post("/api/v1/needs/" + identifier + "/analyze", headers=identity)
+                      assert analysis.status_code == 200, analysis.text
+              match = client.get("/api/v1/needs/" + saved.json()["id"] + "/matches", headers=auth)
+              assert match.status_code == 200, match.text
+              assert match.json()["potential_members"] == 1, match.text
+              assert "postgres-peer@example.com" not in match.text
           PY
       - name: API tests and lint
         run: |

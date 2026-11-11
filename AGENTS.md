@@ -2,7 +2,7 @@
 
 Read [STATUS](docs/STATUS.md), [ROADMAP](docs/ROADMAP.md), and [ARCHITECTURE](docs/ARCHITECTURE.md) before making changes. Consult [DECISIONS](docs/DECISIONS.md) and [integration contracts](docs/INTEGRATION_CONTRACTS.md) for relevant decisions.
 
-- Stage 1 is the current scope. Do not implement Stage 2 or later without the user's next explicit request. Preserve the authenticated user-owned needs API.
+- Stage 2 is the current scope. Do not implement Stage 3 or later without explicit request. Maintain user-owned needs and consent-by-default privacy. Preserve the authenticated user-owned needs API.
 - Preserve the Next.js frontend / FastAPI backend architecture and stable `/api/v1` contracts.
 - Make minimal, scoped changes. Reuse existing components and dependencies; do not rewrite unrelated modules.
 - Keep TypeScript in `apps/web`, Python in `apps/api`, and architecture / handoff documents in `docs`.
