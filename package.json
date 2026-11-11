@@ -1,0 +1,12 @@
+{
+  "name": "one-many",
+  "private": true,
+  "version": "0.1.0",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev:web": "npm --prefix apps/web run dev",
+    "build:web": "npm --prefix apps/web run build",
+    "lint:web": "npm --prefix apps/web run lint",
+    "typecheck:web": "npm --prefix apps/web run typecheck"
+  }
+}

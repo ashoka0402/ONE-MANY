@@ -1,0 +1,65 @@
+from contextlib import asynccontextmanager
+from http import HTTPStatus
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException
+
+from one_many_api.config import Settings
+from one_many_api.logging import configure_logging
+
+
+def create_app(settings: Settings | None = None) -> CORSMiddleware:
+    settings = settings or Settings()
+    logger = configure_logging(settings.log_level)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        logger.info("application_started")
+        yield
+        logger.info("application_stopped")
+
+    app = FastAPI(title="ONE / MANY API", version="0.1.0", lifespan=lifespan)
+    app.state.settings = settings
+
+    @app.exception_handler(HTTPException)
+    async def http_error(request: Request, exc: HTTPException) -> JSONResponse:
+        message = HTTPStatus(exc.status_code).phrase
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"error": {"code": f"http_{exc.status_code}", "message": message}},
+            headers=exc.headers,
+        )
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+        return JSONResponse(
+            status_code=422,
+            content={"error": {"code": "validation_error", "message": "Request validation failed"}},
+        )
+
+    @app.exception_handler(Exception)
+    async def unexpected_error(request: Request, exc: Exception) -> JSONResponse:
+        logger.error("unhandled_exception", extra={"error_type": type(exc).__name__})
+        return JSONResponse(
+            status_code=500,
+            content={"error": {"code": "internal_error", "message": "Internal server error"}},
+        )
+
+    @app.get("/api/v1/health", tags=["health"])
+    async def health() -> dict[str, str]:
+        return {"status": "ok", "service": "one-many-api", "version": "0.1.0"}
+
+    # Wrap the entire app so unexpected error responses also receive CORS headers.
+    return CORSMiddleware(
+        app,
+        allow_origins=settings.cors_origins,
+        allow_credentials=False,
+        allow_methods=["GET"],
+        allow_headers=["Content-Type"],
+    )
+
+
+app = create_app()
