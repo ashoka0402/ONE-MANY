@@ -83,7 +83,8 @@ def test_mocked_provider_transmits_schema_and_validates_payload(monkeypatch):
                             "parts": [
                                 {
                                     "text": (
-                                        '{"asset_type":"pressure washer","purpose":"Clean driveway",'
+                                        '{"asset_type":"pressure washer",'
+                                    '"purpose":"Clean driveway",'
                                         '"required_features":[],"excluded_features":[],"shareable":true}'
                                     )
                                 }
