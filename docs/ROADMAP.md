@@ -1,16 +1,16 @@
 # Roadmap
 
-Current stage: **0 — Foundation and design system** (frontend lint, types, build, API tests, Ruff and Compose configuration passed in GitHub Actions). Stop here until the next explicit user prompt. Target hackathon deadline: **November 13, 2026, 01:30 IST**. Later stages are a proposed sequence, not authorization to implement them.
+Current stage: **1 — Identity, needs and persistence** (implementation in review). Hackathon deadline: **November 13, 2026 at 01:30 IST**.
 
 | Stage | Scope | Acceptance criteria |
 | --- | --- | --- |
-| 0 | Foundation and design system | Monorepo, landing and honest app shell, accessible responsive tokens/motion, FastAPI health/settings/errors/logging/CORS, database configuration, Compose, handoff docs, verified checks and Git checkpoint. |
-| 1 | Identity, needs, and persistence | Agreed domain schema and migrations; authenticated resource ownership; users can create/read/update needs; input and authorization tests. |
-| 2 | AI extraction and compatible demand | Server-only AI integration with structured validated output, explicit failure states, compatibility rules and explainable suggestions; fixtures and contract tests. |
-| 3 | Channel3 products and group proposals | Real product retrieval, normalized identifiers/currency/availability, deterministic group cost allocation, no fabricated catalog data; adapter and business-rule tests. |
-| 4 | PayPal Sandbox contributions | Member-specific authorization, verified capture/webhook flow, idempotent reconciliation, amount/currency checks, cancellation and failure paths; sandbox evidence. |
-| 5 | Shared-asset scheduling | License decision for Bryntum, server-authorized reservations, conflict rules, timezone policy and cancellation; scheduling tests. |
-| 6 | Funding and ownership records | AG Grid license/feature decision, authorized ledger views from verified backend records, reconciled ownership and transparent statuses; access and calculation tests. |
-| 7 | Demo readiness and hardening | End-to-end sandbox flow, accessibility/responsiveness/performance checks, secret and dependency review, documented demo/reset steps; deploy only with authorization. |
+| 0 | Foundation / design | Complete: Next.js build, FastAPI health/tests, PostgreSQL smoke, docs and CI |
+| 1 | Identity, needs and persistence | Account registration/login, ownership checks, Alembic migration, persistent need CRUD, real web forms, API tests, Postgres migration smoke |
+| 2 | AI matching | Strict structured extraction, compatible-needs deterministic checks, explainable group candidates and provider failure handling |
+| 3 | Channel3/product proposals | Verified live catalog, normalized pricing and availability, transparent group contribution calculations |
+| 4 | PayPal Sandbox funding | Member-specific sandbox checkout, verified capture, idempotent reconciliation, cancellation and failure tests |
+| 5 | Bryntum scheduling | Licensed integration, authorized reservations, conflict tests and timezone rules |
+| 6 | AG Grid ledger | Verified contribution data, ownership breakdown and auditable presentation |
+| 7 | Demo / delivery | Hosted functioning app or reproducible setup, end-to-end checkout demo, public GitHub license, <=3 minute YouTube video, Devpost |
 
-Every stage must preserve API contracts, update the handoff documents, run relevant verification, and report skipped or failing checks honestly. No stage may imply real funds or live payment readiness from sandbox behavior.
+No future stage is authorized by this roadmap. Changes to financial records require deterministic rules and tests.

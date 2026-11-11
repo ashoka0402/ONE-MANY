@@ -1,36 +1,40 @@
 # Integration contracts
 
-## Implemented in Stage 0
+API base: `/api/v1`; documented in FastAPI's `/docs`.
 
-Development API origin: `http://localhost:8000`. API version prefix: `/api/v1`.
+## Public routes
 
-`GET /api/v1/health` returns HTTP 200:
+- `GET /health` — only liveness; not DB readiness.
+- `POST /auth/register` — JSON `{email,display_name,password}`; 201 yields `{access_token,token_type,expires_in,user}`; duplicate email 409.
+- `POST /auth/login` — JSON `{email,password}`; 200 yields auth response; invalid login 401.
 
-```json
-{"status":"ok","service":"one-many-api","version":"0.1.0"}
-```
+Password must have 12–128 characters at registration. Access token expires in 60 minutes by default. `AUTH_SECRET` is required for auth, and `DATABASE_URL` for persistence. In production both are mandatory.
 
-This endpoint reports process liveness only. It does not access PostgreSQL, AI, products, payments, or scheduling services. No authentication is required for this public liveness response.
+## Authenticated routes
 
-Application error responses use:
+Send `Authorization: Bearer <access_token>`.
 
-```json
-{"error":{"code":"http_404","message":"Not Found"}}
-```
-
-HTTP errors use `http_<status>` and a safe status phrase. Invalid request data uses HTTP 422 with `validation_error` / `Request validation failed`. Unexpected failures use HTTP 500 with `internal_error` / `Internal server error`. Responses omit submitted values, exception details, and secrets. Native CORS preflight responses are middleware protocol responses, not domain errors.
-
-The configured browser origin defaults to `http://localhost:3000`. Stage 0 allows GET, Content-Type, and no cross-origin credentials. Future authenticated or mutating endpoints must explicitly update policy and tests. API documentation is available at `/docs` and `/openapi.json`.
-
-## Planned boundaries — no endpoints or adapters implemented
-
-| Integration | Owner and responsibility | Required verification before implementation is complete |
+| Method | Path | Result |
 | --- | --- | --- |
-| AI | API validates extracted needs and compatibility suggestions | Structured schema, malicious input and invalid output handling, timeouts, provider failures, server-side credentials; suggestions are not business authority. |
-| Channel3 | API retrieves real products and normalizes catalog records | Verify current provider API; preserve source IDs, prices/currencies, availability and retrieval time. Never silently replace failures with fake products. |
-| Group business logic | API calculates member allocations and candidate schedules | Deterministic calculations, integer minor currency units, explicit rounding, membership/ownership authorization and atomic state changes. |
-| PayPal Sandbox | API creates/verifies individual contribution flow and reconciles webhooks | Verify IDs, amount/currency, payee, signature/provider verification, idempotency and replay handling. Browser callbacks cannot mark a group funded. |
-| Bryntum | Web displays usage calendar; API owns reservations | License availability, timezone policy, authorized access and backend conflict checks. Do not install commercial components before the license decision. |
-| AG Grid | Web displays API-authorized funding and ownership rows | Community vs enterprise feature/license decision, verified underlying data, safe rendering and resource access control. |
+| GET | /auth/me | Authenticated user identity without password hash |
+| POST | /needs | Create owned need (201) |
+| GET | /needs | List only caller's needs; `limit` 1–100, `offset` 0–10000, optional `status=open|archived` |
+| GET | /needs/{uuid} | Read one owned need; 404 for unknown or not owned |
+| PATCH | /needs/{uuid} | Partial update of owned need or status |
+| DELETE | /needs/{uuid} | Soft archive one owned need (204); not physical deletion |
 
-Future route names, provider payloads, schema details and financial state machines must be agreed in their requested stage. This document intentionally does not promise undocumented third-party APIs.
+Need create payload:
+
+```json
+{"request_text":"Need a pressure washer next weekend","location_label":"Pune","needed_from":"2026-11-14","needed_until":"2026-11-15"}
+```
+
+Dates and location are optional. Need text must be 12–2000 characters. The end date cannot precede the start date. Need responses additionally contain server-assigned ID, owner_id, status and timestamps. No caller may assign owner_id or mark a payment status.
+
+List response: `{items:[...],total,limit,offset}`.
+
+Error response: `{"error":{"code":"http_401","message":"Unauthorized"}}` for HTTP errors, `{"error":{"code":"validation_error","message":"Request validation failed"}}` for Pydantic 422 validation, and a generic 500 without secrets for unexpected errors.
+
+## Deferred provider contracts
+
+AI outputs must be parsed/validated and cannot charge or fund a group. Channel3 products must retain real source identifiers, currency and retrieval time. Future PayPal records must verify amount, currency, payee and provider capture/signature server-side, with idempotency and replay protection. Bryntum is presentation, while API validates reservation conflicts. AG Grid must display only authorized verified records. Sponsor licenses must be checked before installation.

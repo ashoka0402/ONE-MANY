@@ -1,38 +1,42 @@
-# Architecture
+# ONE / MANY — System Architecture
 
-ONE / MANY converts separate customer needs into compatible shared purchases. **Stage 0 implements only the visual and service foundation.**
+Stage 1 is the working identity and needs foundation. Matching, purchase proposals, payments, asset scheduling and ledger features remain separate future stages.
 
 ```text
-Browser → Next.js App Router (apps/web)
-              │ planned HTTP /api/v1 calls
-              ▼
-          FastAPI (apps/api) → PostgreSQL (local Docker Compose)
-              │ planned server-side adapters
-              ├── AI requirement extraction
-              ├── Channel3 product discovery
-              └── PayPal Sandbox contributions and verified webhooks
-
-Future frontend integration: Bryntum scheduling; AG Grid funding/ownership records
+Browser — Next.js App Router (/app)
+  │ signup/login → token held in memory only
+  │ /api/v1/auth/* and /api/v1/needs/*
+  ▼
+FastAPI — request validation → authorization → owned need CRUD
+  │ PyJWT HS256 (60 min), Argon2 password hashing
+  │ SQLAlchemy Session (one per request)
+  ▼
+PostgreSQL 17 — users, needs tables
+  ▲
+  └─ Alembic migration 20261112_01
 ```
 
-The diagram includes future connections. Currently the web routes render without API calls; the API exposes liveness without a database query. No business tables or integration adapters exist.
+## Service responsibilities
 
-## Responsibilities
-
-- **Web:** responsive landing page, application navigation, design tokens, accessible reusable components, and honest empty states. Next.js App Router and TypeScript with Tailwind CSS v4, shadcn/ui, selective Aceternity components, Motion, tsParticles, and Lucide.
-- **API:** HTTP contracts, environment validation, JSON logging, centralized errors, CORS policy, and database connection configuration. Future business validation and integration credentials belong here.
-- **PostgreSQL:** future durable domain records and transactional state. Compose provides an isolated local volume; SQLAlchemy and Alembic are prepared, but schema creation and migrations await the domain stage.
-- **Docs:** durable handoff across Codex, ChatGPT, and human developers; record current reality separately from planned behavior.
+- **Next.js:** polished account screens, need submission and management, API error states, static stage-preview navigation. Client tokens are in React state (lost on refresh; no localStorage).
+- **FastAPI:** input contracts, identity, password verification, signed access tokens, owner authorization, pagination, date constraints, CORS and normalized error responses.
+- **PostgreSQL:** users and owner-scoped needs, unique normalized email, status/date constraints and indexed queries. SQLAlchemy writes use transactions. Alembic owns schema migrations.
+- **AI, Channel3, PayPal, Bryntum, AG Grid:** deliberately not yet implemented.
 
 ## Trust boundaries
 
-1. Browser input is untrusted. Future API endpoints must validate input, authenticate users, and authorize access to each resource; CORS is not authentication.
-2. Environment secrets are backend-only. `NEXT_PUBLIC_*` values are public and must never contain credentials.
-3. AI output and external catalog data are untrusted suggestions. Backend rules must validate compatibility, prices, currency, allocation, and schedules before state changes.
-4. A client redirect or frontend payment success screen never proves funding. PayPal server verification, signed/verified webhooks, idempotency, and amount/currency reconciliation are required before recording contributions.
-5. Scheduling views and grid rows are presentation; backend authorization and consistency checks remain authoritative.
-6. PostgreSQL binds to loopback locally. Use separate production credentials and infrastructure in a later deployment stage. Do not expose this development Compose service publicly.
+1. Browser-provided identity, dates, and need text are untrusted. FastAPI validates all input and derives owner_id from verified token only.
+2. Passwords are hashed with Argon2; token signing and DB credentials are backend-only, never NEXT_PUBLIC variables.
+3. Need lookup and mutation always filter by owner_id; cross-account access receives the same 404 as unknown IDs.
+4. CORS only permits declared origins and headers; it is not access control.
+5. Browser-held access tokens can be exposed by XSS: this prototype intentionally keeps tokens only in memory and requires re-login on refresh, limiting persistence. Before production use, adopt secure httpOnly session cookies, CSRF protections, refresh-token rotation, rate limiting and account recovery.
+6. AI suggestions and catalog data must never bypass deterministic pricing, compatibility, scheduling or transaction verification.
+7. PayPal contribution records may only be recognized after verified server-side capture, not a browser redirect. Do not implement unauthorized escrow or claim purchases occurred.
 
-## Contracts and integration policy
+## Data model
 
-See [INTEGRATION_CONTRACTS](INTEGRATION_CONTRACTS.md). Only documented Stage 0 routes are implemented. Choose provider SDKs and verify licensing when their stages begin; Bryntum and any commercial grid features require a licensing decision before installation. No paid components are installed in Stage 0.
+- `users`: UUID, normalized unique email, display name, Argon2 password hash, created timestamp.
+- `needs`: UUID, owner UUID FK, free-text intent, optional location, optional date window, status (`open`/`archived`), created and updated timestamps.
+- Future stages add normalized extracted requirements, product candidates, matching proposals, groups, contributions and bookings by migration rather than speculatively building empty tables today.
+
+See [INTEGRATION_CONTRACTS](INTEGRATION_CONTRACTS.md) for the API and [STATUS](STATUS.md) for actual verification.

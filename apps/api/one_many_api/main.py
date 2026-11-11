@@ -9,6 +9,8 @@ from starlette.exceptions import HTTPException
 
 from one_many_api.config import Settings
 from one_many_api.logging import configure_logging
+from one_many_api.database import build_session_factory
+from one_many_api.routes import router
 
 
 def create_app(settings: Settings | None = None) -> CORSMiddleware:
@@ -17,12 +19,19 @@ def create_app(settings: Settings | None = None) -> CORSMiddleware:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        connection = build_session_factory(settings)
+        app.state.db_session_factory = connection[0] if connection else None
         logger.info("application_started")
-        yield
-        logger.info("application_stopped")
+        try:
+            yield
+        finally:
+            if connection:
+                connection[1].dispose()
+            logger.info("application_stopped")
 
     app = FastAPI(title="ONE / MANY API", version="0.1.0", lifespan=lifespan)
     app.state.settings = settings
+    app.include_router(router)
 
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException) -> JSONResponse:
@@ -57,8 +66,8 @@ def create_app(settings: Settings | None = None) -> CORSMiddleware:
         app,
         allow_origins=settings.cors_origins,
         allow_credentials=False,
-        allow_methods=["GET"],
-        allow_headers=["Content-Type"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_headers=["Content-Type", "Authorization"],
     )
 
 

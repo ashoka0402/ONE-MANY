@@ -1,12 +1,6 @@
-import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, CalendarDays, CircleHelp, CreditCard, LayoutDashboard, Lightbulb, Users } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
-const sections = [
-  { id: "needs", title: "Your needs", icon: Lightbulb, text: "It starts with something you need.", detail: "Natural-language need capture and matching will arrive in a later stage." },
-  { id: "groups", title: "Purchasing groups", icon: Users, text: "Good company. A shared purpose.", detail: "Compatible purchasing groups and real product options are coming later." },
-  { id: "payments", title: "Contributions", icon: CreditCard, text: "Your share, clearly understood.", detail: "PayPal Sandbox authorization and verified contribution records are not connected yet." },
-  { id: "schedule", title: "Shared schedule", icon: CalendarDays, text: "Everyone gets their turn.", detail: "Shared-asset scheduling and ownership records are planned for future stages." },
-];
+import { Workspace } from "@/components/workspace";
+import "./workspace.css";
+
 export default function AppPage() {
-  return <div className="app-layout"><aside className="app-sidebar"><Link href="/" className="wordmark">ONE <span>/</span> MANY</Link><div className="workspace-label">YOUR SHARED SPACE</div><nav aria-label="Workspace navigation"><Link href="/app" aria-current="page" className="active"><LayoutDashboard size={19} /> Overview</Link>{sections.map(({ id, title, icon: Icon }) => <a href={`#${id}`} key={id}><Icon size={19} /> {title}</a>)}</nav><div className="sidebar-note"><CircleHelp size={20} /><strong>A beginning, together.</strong><p>This is a foundation preview. No account, purchases or payments are active.</p><Link href="/">Back to the idea <ArrowUpRight size={14} /></Link></div></aside><div className="app-main"><header className="app-topbar"><span>Workspace / <strong>Overview</strong></span><span className="outline-label">STAGE 0 PREVIEW</span></header><main id="main" className="overview"><div className="overview-heading"><div><p className="eyebrow">A LITTLE LESS ME. A LOT MORE WE.</p><h1>Your next great thing<br /><span className="serif-word">starts here.</span></h1><p>A space for your needs, your people, and the things you’ll share.</p></div><span className="overview-star" aria-hidden="true">&#10035;</span></div><div className="preview-banner"><span className="status-dot" /><p><strong>We’re laying the foundation.</strong> Explore the space below. Features will arrive in the next stages.</p></div><div className="empty-grid">{sections.map(({ id, title, icon: Icon, text, detail }) => <section id={id} key={id} className="empty-card"><div className="empty-card-heading"><h2>{title}</h2><span>Coming later</span></div><div className="empty-icon"><Icon size={29} strokeWidth={1.4} /></div><h3>{text}</h3><p>{detail}</p><div className="empty-rule" /></section>)}</div><div className="workspace-footer"><p>No demo transactions. No pretend matches. Just a clear starting point.</p><Link href="/" data-slot="button" className={buttonVariants({ variant: "outline" })}><ArrowLeft size={16} /> Back to the idea</Link></div></main></div></div>;
+  return <Workspace />;
 }

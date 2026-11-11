@@ -88,6 +88,7 @@ def test_settings_read_environment(monkeypatch):
     monkeypatch.setenv("CORS_ORIGINS", '["https://one-many.example"]')
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://user:private@localhost/one_many")
+    monkeypatch.setenv("AUTH_SECRET", "not-a-real-credential-just-long-enough-for-tests")
     settings = Settings(_env_file=None)
     assert settings.environment == "production"
     assert settings.cors_origins == ["https://one-many.example"]

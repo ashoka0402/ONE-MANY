@@ -1,7 +1,7 @@
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import SecretStr, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
@@ -16,6 +16,17 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     cors_origins: list[str] = ["http://localhost:3000"]
     database_url: SecretStr | None = None
+    auth_secret: SecretStr | None = None
+    access_token_minutes: int = Field(default=60, ge=5, le=1440)
+
+    @model_validator(mode="after")
+    def credentials_for_production(self) -> "Settings":
+        if self.auth_secret is not None and len(self.auth_secret.get_secret_value()) < 32:
+            raise ValueError("AUTH_SECRET must contain at least 32 characters")
+        if self.environment == "production":
+            if self.auth_secret is None or self.database_url is None:
+                raise ValueError("Production requires AUTH_SECRET and DATABASE_URL")
+        return self
 
     @field_validator("cors_origins")
     @classmethod

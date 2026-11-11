@@ -2,20 +2,44 @@
 
 **Many people. One smarter purchase.**
 
-Stage 0 provides a premium responsive landing page, an honest application shell, and a FastAPI service foundation. Frontend dependencies, the Aceternity-style Bento component, and brand styling are wired up; verification is performed via GitHub Actions where possible. Matching, products, payments, and scheduling are future work. No AI calls or financial transactions occur.
+A community-first collective purchasing prototype: Stage 1 now includes **real accounts and a private, persistent needs workspace**, while AI demand matching, Channel3, PayPal payments, AG Grid, and Bryntum scheduling are upcoming stages. No purchases or live payment capabilities are claimed.
 
-Read [current status](docs/STATUS.md), [roadmap](docs/ROADMAP.md), [architecture](docs/ARCHITECTURE.md), [decisions](docs/DECISIONS.md), and [integration contracts](docs/INTEGRATION_CONTRACTS.md) before continuing development.
+[Development status](docs/STATUS.md) · [Roadmap](docs/ROADMAP.md) · [Architecture](docs/ARCHITECTURE.md) · [API contracts](docs/INTEGRATION_CONTRACTS.md) · [Decisions](docs/DECISIONS.md)
 
-## Prerequisites
+## Requirements
 
-- Node.js **22.12+** and npm (verified with Node 22.23.2; [.nvmrc](.nvmrc) pins that version).
-- Python **3.12+** (verified with Python 3.13.14).
-- Docker Engine/Desktop and Docker Compose for local PostgreSQL. The web and liveness endpoint can run without it.
-- The project's MIT license is at [LICENSE](LICENSE).
+- Node.js 22.12+ and npm
+- Python 3.12+
+- Docker Engine/Desktop and Docker Compose
 
-## Start the frontend
+## Start PostgreSQL (required for Stage 1)
 
-From the repository root:
+From repository root (PowerShell):
+
+```powershell
+Copy-Item .env.example .env
+# Replace POSTGRES_PASSWORD in the root .env with a unique local password.
+docker compose up -d --wait postgres
+```
+
+## Start API and migrate database
+
+```powershell
+cd apps/api
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+Copy-Item .env.example .env
+# Set DATABASE_URL to match the root .env (URL-encode special chars).
+# Generate a random AUTH_SECRET of >=32 characters, then add it to apps/api/.env.
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe -m uvicorn one_many_api.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
+```
+
+For macOS/Linux, use `.venv/bin/python` and `cp`. Start the API from `apps/api` so Pydantic loads that directory's `.env`. API docs: http://localhost:8000/docs; liveness: http://localhost:8000/api/v1/health.
+
+## Start the Next.js frontend
+
+In a separate PowerShell terminal, from repository root:
 
 ```powershell
 npm ci --prefix apps/web
@@ -23,65 +47,36 @@ Copy-Item apps/web/.env.example apps/web/.env.local
 npm run dev:web
 ```
 
-Open <http://localhost:3000> for the landing page and <http://localhost:3000/app> for the application shell. The shell does not yet call the API. The public API origin in the web environment is configuration for later integration, never a place for secrets.
+Visit http://localhost:3000 and then http://localhost:3000/app. Register, describe an item you need, edit it, archive it, and sign in again to see the persisted results.
 
-## Start the API
-
-In another PowerShell terminal:
+## Test
 
 ```powershell
-cd apps/api
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-Copy-Item .env.example .env
-.\.venv\Scripts\python.exe -m uvicorn one_many_api.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
-```
-
-Open <http://localhost:8000/api/v1/health> or API docs at <http://localhost:8000/docs>. Run from `apps/api` so settings load its `.env`. On macOS/Linux use `.venv/bin/python` in place of `.\.venv\Scripts\python.exe`, and `cp` in place of `Copy-Item`.
-
-Application and Uvicorn server error logs use JSON and omit exception values and tracebacks after application initialization. Access logging is disabled in the documented command to avoid logging sensitive query strings. Health is **liveness only**, not database readiness.
-
-## Start PostgreSQL (optional for Stage 0)
-
-From the repository root:
-
-```powershell
-Copy-Item .env.example .env
-# Edit .env and set a unique POSTGRES_PASSWORD, then:
-docker compose up -d postgres
-docker compose ps
-```
-
-Set `DATABASE_URL` in `apps/api/.env` to `postgresql+psycopg://one_many:<URL-encoded-password>@localhost:5432/one_many`, matching the root `.env`. The password must be URL-encoded if it contains special characters. Stage 0 validates connection configuration without opening a connection or creating tables. Do not commit either local environment file.
-
-PostgreSQL binds to `127.0.0.1:5432` and persists in a named Docker volume. `docker compose down` stops it while preserving data. Changing `.env` credentials after a volume is initialized does not change the database role's password; migrate credentials deliberately and do not delete volumes to work around it.
-
-## Verify
-
-```powershell
-# Repository root
 npm run lint:web
 npm run typecheck:web
 npm run build:web
-docker compose config --quiet
 
-# apps/api
+cd apps/api
 .\.venv\Scripts\python.exe -m pytest -q
 .\.venv\Scripts\python.exe -m ruff check .
+.\.venv\Scripts\python.exe -m alembic current
 ```
 
-Compose validation requires a configured root `.env`. See [STATUS](docs/STATUS.md) for actual results and limitations. Production web serving after a successful build: `npm --prefix apps/web start`.
+GitHub Actions also checks a live PostgreSQL migration and API create/read smoke test. See the latest [CI runs](https://github.com/ashoka0402/ONE-MANY/actions).
 
-## Layout
+## Stage 1 API endpoints
 
-```text
-apps/
-  web/                 Next.js App Router, UI, design tokens, npm lockfile
-  api/                 FastAPI, settings, logging, tests, Python dependencies
-docs/                  Architecture, roadmap, status, decisions, contracts
-docker-compose.yml     Local PostgreSQL only
-.env.example           Database environment template
-AGENTS.md              Rules for future stages and agents
-```
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
+- `POST /api/v1/needs`
+- `GET /api/v1/needs?limit=30&offset=0&status=open`
+- `GET /api/v1/needs/{id}`
+- `PATCH /api/v1/needs/{id}`
+- `DELETE /api/v1/needs/{id}` (archives; not permanent deletion)
 
-Do not start Stage 1 until explicitly requested. No deployment is included.
+All needs endpoints require `Authorization: Bearer <token>`. The only public API routes beyond docs and health are account creation and login. Tokens expire after one hour by default; the demo web app retains them in memory only, so refreshing requires logging in again.
+
+**Security note:** CORS is not authentication. All need reads and mutations check ownership server-side. Do not expose real credentials, seed fake payment data, or imply escrow. Stage 1 is a hackathon prototype, not a production-ready consumer identity platform.
+
+MIT licensed: [LICENSE](LICENSE).

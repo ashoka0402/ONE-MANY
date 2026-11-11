@@ -1,4 +1,4 @@
-name: Verify Stage 0
+name: Verify ONE / MANY
 
 on:
   push:
@@ -33,6 +33,46 @@ jobs:
           python-version: "3.13"
       - name: Install API
         run: python -m pip install -e "./apps/api[dev]"
+      - name: Start PostgreSQL and apply Stage 1 migrations
+        env:
+          POSTGRES_PASSWORD: validation-only-not-real
+          DATABASE_URL: postgresql+psycopg://one_many:validation-only-not-real@127.0.0.1:5432/one_many
+        run: |
+          docker compose up -d --wait postgres
+          cd apps/api
+          python -m alembic upgrade head
+          cd ../..
+          python - <<'PY'
+          import psycopg
+          with psycopg.connect("postgresql://one_many:validation-only-not-real@127.0.0.1:5432/one_many") as connection:
+              assert connection.execute("SELECT to_regclass('public.users')").fetchone()[0] == "users"
+              assert connection.execute("SELECT to_regclass('public.needs')").fetchone()[0] == "needs"
+              assert connection.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "20261112_01"
+          PY
+          python - <<'PY'
+          from fastapi.testclient import TestClient
+          from one_many_api.config import Settings
+          from one_many_api.main import create_app
+          settings = Settings(
+              _env_file=None,
+              environment="test",
+              auth_secret="CI-only-secret-test-value-with-at-least-32-characters",
+              database_url="postgresql+psycopg://one_many:validation-only-not-real@127.0.0.1:5432/one_many",
+          )
+          with TestClient(create_app(settings)) as client:
+              signed_up = client.post("/api/v1/auth/register", json={
+                  "email": "postgres-smoke@example.com",
+                  "display_name": "Database Smoke",
+                  "password": "not-a-real-secret-password-123",
+              })
+              assert signed_up.status_code == 201, signed_up.text
+              auth = {"Authorization": "Bearer " + signed_up.json()["access_token"]}
+              saved = client.post("/api/v1/needs", headers=auth, json={
+                  "request_text": "Need a projector for Friday evening workshop",
+              })
+              assert saved.status_code == 201, saved.text
+              assert client.get("/api/v1/needs", headers=auth).json()["total"] == 1
+          PY
       - name: API tests and lint
         run: |
           python -m pytest -q apps/api/tests
@@ -41,14 +81,8 @@ jobs:
         env:
           POSTGRES_PASSWORD: validation-only-not-real
         run: docker compose config --quiet
-      - name: Verify PostgreSQL starts and accepts connections
+      - name: Shut down test database
+        if: always()
         env:
           POSTGRES_PASSWORD: validation-only-not-real
-        run: |
-          docker compose up -d --wait postgres
-          python - <<'PY'
-          import psycopg
-          with psycopg.connect("postgresql://one_many:validation-only-not-real@127.0.0.1:5432/one_many") as conn:
-              assert conn.execute("SELECT 1").fetchone() == (1,)
-          PY
-          docker compose down
+        run: docker compose down
