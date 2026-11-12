@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   checks:
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: true
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -33,18 +33,6 @@ jobs:
           python-version: "3.13"
       - name: Install API
         run: python -m pip install -e "./apps/api[dev]"
-      - name: One-time Stage 4 Python formatting
-        run: |
-          python -m ruff format apps/api
-          python -m ruff check --fix apps/api || true
-          python -m ruff format apps/api
-          if ! git diff --quiet -- apps/api; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add apps/api
-            git commit -m "style(stage-4): format sandbox funding code"
-            git push origin HEAD:main
-          fi
       - name: Start PostgreSQL and apply Stage 4 migrations
         env:
           POSTGRES_PASSWORD: validation-only-not-real

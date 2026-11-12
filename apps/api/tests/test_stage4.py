@@ -463,7 +463,6 @@ def test_mismatched_capture_does_not_count_as_paid(client, monkeypatch):
     assert created_order.status_code == 200
 
     def fraudulent(self, order_id):
-        group = client.get(f"/api/v1/funding/groups/{gid}", headers=a).json()
         # Simulate an approval/order claiming an incorrect payment amount.
         return paypal_order(gid, "not-the-requested-attempt", "0.01", state="COMPLETED")
 
