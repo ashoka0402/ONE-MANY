@@ -12,6 +12,7 @@ from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from one_many_api.config import Settings
 from one_many_api.database import get_db
 from one_many_api.funding_routes import _mark_captured
 from one_many_api.main import create_app
@@ -25,7 +26,6 @@ from one_many_api.models import (
     PurchaseProposal,
     User,
 )
-from one_many_api.config import Settings
 from one_many_api.paypal import PayPalSandboxClient
 
 SECRET = "stage-six-test-only-api-auth-secret-at-least-32-chars"
