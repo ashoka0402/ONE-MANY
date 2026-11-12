@@ -1,6 +1,6 @@
 # Roadmap
 
-Current stage: **3 — Channel3 catalog and saved draft shared-purchase proposals** (automated checks passed). Stage 4 PayPal Sandbox awaits authorization. Hackathon deadline: **November 13, 2026 at 01:30 IST**.
+Current stage: **4 — member-approved PayPal Sandbox funding and capture verification** (automated verification in progress). Hackathon deadline: **November 13, 2026 at 01:30 IST**.
 
 | Stage | Scope | Acceptance criteria |
 | --- | --- | --- |

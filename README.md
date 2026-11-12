@@ -4,6 +4,34 @@
 
 ONE / MANY helps people discover compatible requests and propose shared purchases. Stage 3 integrates **real Channel3 product searches and offer rechecks** with persistent, deterministic draft cost-sharing quotes. There is no PayPal charge or physical purchase in this stage.
 
+## Stage 4: PayPal Sandbox funding
+
+Stage 4 adds member-approved **Sandbox-only** checkout to the existing Gemini + Channel3 workflow. A potential AI match does not enroll or charge anybody.
+
+1. The organizer creates a funding group from a fresh Stage 3 catalog draft. The backend rechecks the selected merchant price.
+2. The organizer shares an invitation code. A second account explicitly joins using its own compatible, opted-in need, with a non-overlapping date window.
+3. After all slots are accepted, each participant chooses PayPal Sandbox approval for **their own exact share**. The server rechecks eligibility and the live Channel3 offer.
+4. PayPal redirects back to the app. Because access tokens are memory-only, sign in again, refresh the group list and click **Verify / capture approved payment**.
+5. The backend fetches the PayPal order, checks reference IDs, exact amount and currency, performs idempotent capture when approved, then checks PayPal again. Only a verified COMPLETED capture increases the ledger.
+6. The group is funded only if every accepted participant has a verified capture and the total matches the quote. Verified signed webhook events also reconcile completion and reversals.
+
+**Important:** Sandbox payments use fake money. Funds go to the test merchant account, **not escrow**; no retailer purchase, automatic refunds, asset delivery, or legal co-ownership is implemented.
+
+### Deferred credentials
+
+Add these **server-only** values to `apps/api/.env` during final manual QA, not to GitHub:
+
+```dotenv
+PAYPAL_CLIENT_ID=your_sandbox_client_id
+PAYPAL_CLIENT_SECRET=your_sandbox_client_secret
+PAYPAL_WEBHOOK_ID=your_sandbox_webhook_id
+PUBLIC_WEB_URL=http://localhost:3000
+```
+
+A webhook listener must be publicly accessible via HTTPS to receive PayPal events; register `POST /api/v1/paypal/webhook` in the Sandbox app for capture completed, pending, denied and refunded notifications. The adapter has **no production PayPal URL**. PayPal Orders v2 does not support INR as an ordinary Checkout currency, so the app rejects INR funding groups rather than silently converting amounts.
+
+Apply the new migration: `cd apps/api && python -m alembic upgrade head`. The rest of the Stage 3 setup and test commands below remain applicable.
+
 ## What is actually implemented
 
 - Stage 1: registered accounts, password hashing, private PostgreSQL needs and API ownership checks.

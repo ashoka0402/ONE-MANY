@@ -1,20 +1,20 @@
-# Stage 3 — Product discovery and draft proposals
+# Stage 4 — PayPal Sandbox funding and reconciliation
 
-Status: **Stage 3 complete at the automated build/test level**. Stage 4 has not started.
+**Implementation committed; automated verification pending.**
 
-## Added
-- Real Channel3 search (`POST /v1/search`) for the Gemini-extracted reusable asset and stated required features.
-- Server-side product revalidation (`GET /v1/products/{id}`) when the user selects an offer and asks for a draft quote.
-- In-stock merchant offer normalization: HTTPS links, actual prices, supported currencies, no fabricated stock, no automatic currency conversion.
-- Conservative catalog evidence labels: blocked, manual review, or candidate. Search text is not proof of physical suitability.
-- Strict server-side pricing: integer minor units, exact shares with remainder, user-submitted prices ignored.
-- Persistent `purchase_proposals` draft records in Alembic revision 20261112_03, owner-specific list/read API.
-- Frontend product browser, merchant selector, unapproved quote breakdown and saved history.
+## Implemented
+
+- Persisted, time-limited funding groups, hashed invitations, owner-linked memberships and single-attempt payment ledgers through Alembic revision `20261112_04`.
+- Explicit member acceptance and compatibility checks before any order. Potential AI matches are not charged or automatically joined.
+- Real PayPal Sandbox OAuth + Orders v2 API adapter, fixed server-owned amounts, stable create/capture idempotency keys, order and completed-capture verification.
+- Server-side signature verification for PayPal webhooks and deduplication by verified event ID. Refund/denial events mark the group for review and remove reversed captures from the completed total.
+- UI for invitations, joining, PayPal approval and post-redirect reconciliation.
+- Tests with provider mocks confined to test code, covering ownership, amount mismatches, duplicate attempts, consent withdrawal and webhook replay.
 
 ## Still pending
-- Live provider key/manual request verification and browser QA are deferred to final validation.
-- No PayPal capture, buyer authorization, legal ownership contract, asset handover, verified location, shipping/taxes or member commitments. Sponsor dashboards and scheduling are later stages.
 
-## Testing
-- Stage 2 last fully verified: [GitHub Actions run 43089960294](https://github.com/ashoka0402/ONE-MANY/actions/runs/43089960294).
-- Stage 3 checks passed in [GitHub Actions run 43157650820](https://github.com/ashoka0402/ONE-MANY/actions/runs/43157650820): 34 backend tests, Ruff, Next.js lint/typecheck/build, Alembic revision 20261112_03, a PostgreSQL-backed draft quote smoke test and Compose validation. After the final hardening, permanent CI runs without write access or autoformat steps. Live Channel3 credentials and actual merchant availability were not tested.
+CI must pass Stage 4 frontend, Python tests, PostgreSQL migration and funding smoke checks. Real Gemini, Channel3 and PayPal Sandbox credentials, actual browser redirects and HTTPS webhooks remain in the final manual QA pass.
+
+## Boundaries
+
+Sandbox payments are fake merchant payments, not escrow, shared legal ownership, authorized retailer purchase or a guarantee of a refund. Only server-verified completed captures count. No real-money mode exists.
