@@ -56,6 +56,14 @@ type Need = {
   created_at: string;
 };
 type NeedsPage = { items: Need[]; total: number };
+type WorkspaceStage = "needs" | "quotes" | "funding" | "ledger" | "schedule";
+const liveStages: { id: WorkspaceStage; label: string }[] = [
+  { id: "needs", label: "Needs & AI" },
+  { id: "quotes", label: "Draft quotes" },
+  { id: "funding", label: "Group funding" },
+  { id: "ledger", label: "Contribution ledger" },
+  { id: "schedule", label: "Shared scheduling" },
+];
 type ApiError = { error?: { message?: string } };
 
 const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
@@ -98,6 +106,7 @@ export function Workspace() {
   const [loadingNeeds, setLoadingNeeds] = useState(false);
   const [demoBusy, setDemoBusy] = useState(false);
   const [demoView, setDemoView] = useState(process.env.NODE_ENV !== "production");
+  const [activeSection, setActiveSection] = useState<WorkspaceStage>("needs");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [needs, setNeeds] = useState<Need[]>([]);
@@ -337,45 +346,49 @@ export function Workspace() {
     );
   }
 
-  const openCount = needs.filter(need => need.status === "open").length;
   return (
     <div className="app-layout">
       <aside className="app-sidebar">
         <Link href="/" className="wordmark">ONE <span>/</span> MANY</Link>
-        <div className="workspace-label">YOUR SHARED SPACE</div>
-        <button className="work-tour-link" type="button" onClick={() => setDemoView(true)}><Sparkles size={16} /> Explore dark demo <ArrowRight size={14} /></button>
-        <nav aria-label="Workspace navigation">
-          <a href="#needs" className="active"><Lightbulb size={18} /> Your needs</a>
-          <a href="#next"><Users size={18} /> Shared groups</a>
-          <a href="#funding"><CreditCard size={18} /> Contributions</a>
-          <a href="#ledger"><ReceiptText size={18} /> Contribution ledger</a>
-          <a href="#scheduling"><CalendarDays size={18} /> Scheduling</a>
+        <div className="workspace-label">YOUR WORKFLOW</div>
+        <nav aria-label="Workspace navigation" className="work-step-navigation">
+          {liveStages.map((step, index) => (
+            <button key={step.id} type="button" onClick={() => setActiveSection(step.id)}
+              className={activeSection === step.id ? "is-active" : ""}
+              aria-current={activeSection === step.id ? "step" : undefined}>
+              <span className="work-nav-number">{String(index + 1).padStart(2, "0")}</span>
+              <span>{step.label}</span><ArrowRight size={14} />
+            </button>
+          ))}
         </nav>
+        <button className="work-tour-link" type="button" onClick={() => setDemoView(true)}><Sparkles size={16} /> Explore complete prototype <ArrowRight size={14} /></button>
         <div className="work-sidebar-profile"><div className="work-avatar">{user.display_name.slice(0, 1).toUpperCase()}</div><div><strong>{user.display_name}</strong><span>{user.email}</span></div></div>
         <button className="work-logout" type="button" onClick={signOut}><LogOut size={16} /> Sign out</button>
       </aside>
       <div className="app-main">
-        <header className="app-topbar"><span>Workspace / <strong>Live workspace</strong></span><button type="button" className="work-tour-topbutton" onClick={() => setDemoView(true)}><Sparkles size={15} /> Interactive demo <ArrowRight size={14} /></button></header>
+        <header className="app-topbar"><span>ONE / MANY / <strong>{liveStages.find(step => step.id === activeSection)?.label}</strong></span><button type="button" className="work-tour-topbutton" onClick={() => setDemoView(true)}><Sparkles size={15} /> View fictional walkthrough <ArrowRight size={14} /></button></header>
         <main id="main" className="work-main">
+          {activeSection === "needs" && <>
           <section className="work-intro">
-            <div><p className="eyebrow"><span className="status-dot" /> THE FIRST STEP</p><h1>What&apos;s on your<br /><em>mind today?</em></h1><p>Describe what you need. AI can identify reusable items, then find possible shared ownership opportunities with your consent.</p></div>
-            <div className="work-count"><strong>{openCount}</strong><span>OPEN NEEDS</span></div>
+            <div><p className="eyebrow"><span className="status-dot" /> 01 / DISCOVERY</p><h1>What&apos;s on your<br /><em>mind today?</em></h1><p>Describe the thing you need. Analyze it with Gemini, then choose whether to find compatible people.</p></div>
+          </section>
+          <section className="work-demo-banner" aria-label="Product prototype">
+            <div><strong>Want to see the complete product in action?</strong>
+              <p>Explore populated quotes, group approvals, AG Grid records and the Bryntum timeline. All fictional and separate from your account.</p></div>
+            <button type="button" onClick={() => setDemoView(true)}><Sparkles size={15} /> Explore five-stage prototype</button>
           </section>
           {process.env.NODE_ENV !== "production" && (
-            <section className="work-demo-banner" aria-label="Fictional demo data">
-              <div>
-                <strong>Explore with example data</strong>
-                <p>Load four clearly labeled example needs into this account, or explore the five-section fictional interactive dashboard. No real neighbors or payments.</p>
-              </div>
+            <div className="work-seed-note">
+              <span>Need realistic sample requests in your local database?</span>
               <button type="button" onClick={() => void loadDemoExamples()} disabled={demoBusy || loadingNeeds}>
-                {demoBusy ? <LoaderCircle size={15} className="work-spinner" /> : <Sparkles size={15} />}
-                {demoBusy ? "Loading examples..." : "Load demo data"}
+                {demoBusy ? <LoaderCircle size={14} className="work-spinner" /> : <Lightbulb size={14} />}
+                {demoBusy ? "Adding sample needs…" : "Add four sample needs only"}
               </button>
-            </section>
+            </div>
           )}
           {error && <p className="work-error" role="alert">{error}</p>}
           {notice && <p className="work-notice" role="status"><Check size={16} /> {notice}</p>}
-          <div className="work-ai-instruction"><span><Sparkles size={18} /></span><div><strong>Real AI extraction with Gemini</strong><p>Enter a need and click <b>Save this need</b>. Then use <b>Analyze with Gemini</b> on the saved card. Configure <code>GEMINI_API_KEY</code> in <code>apps/api/.env</code> and restart FastAPI first. Only real requests call Gemini.</p></div></div>
+          <div className="work-ai-instruction"><span><Sparkles size={18} /></span><div><strong>Real Gemini extraction</strong><p>Save a need, then click <b>Analyze with Gemini</b>. Requires <code>GEMINI_API_KEY</code> in your API environment. Nothing is sent to Gemini until you explicitly click Analyze.</p></div></div>
           <div className="work-content">
             <section id="needs" className="work-create-card" aria-labelledby="create-title">
               <div className="work-card-title"><span className="work-kicker">01 / TELL US</span><h2 id="create-title">Add a new need</h2></div>
@@ -480,14 +493,11 @@ export function Workspace() {
               {needs.length >= 100 && <p className="work-helper">Displaying the latest 100 needs; API pagination is available.</p>}
             </section>
           </div>
-          <ProposalHistory token={token} />
-          <FundingPanel token={token} needs={needs} />
-          <LedgerPanel token={token} />
-          <ReservationPanel token={token} />
-          <section id="next" className="work-next">
-            <div><span className="work-kicker">ONE / MANY · EXPLAINABLE SHARING</span><h2>Discovery becomes explicit participation.</h2><p>Compatible people can now join a funding group, approve their own Sandbox contribution, and verify captured amounts through PayPal. AG Grid now displays the recorded contribution ledger, including verified captures and reversals. Bryntum visualizes persisted, conflict-checked member calendars after funding verification. Physical purchase and handover still remain separate.</p></div>
-            <div className="work-next-icon" aria-hidden="true"><Users size={35} /></div>
-          </section>
+          </>}
+          {activeSection === "quotes" && <div id="quotes" className="work-stage-section"><ProposalHistory token={token} /></div>}
+          {activeSection === "funding" && <div className="work-stage-section"><FundingPanel token={token} needs={needs} /></div>}
+          {activeSection === "ledger" && <div className="work-stage-section"><LedgerPanel token={token} /></div>}
+          {activeSection === "schedule" && <div className="work-stage-section"><ReservationPanel token={token} /></div>}
         </main>
       </div>
     </div>
