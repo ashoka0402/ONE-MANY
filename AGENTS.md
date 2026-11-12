@@ -2,7 +2,7 @@
 
 Read [STATUS](docs/STATUS.md), [ROADMAP](docs/ROADMAP.md), and [ARCHITECTURE](docs/ARCHITECTURE.md) before making changes. Consult [DECISIONS](docs/DECISIONS.md) and [integration contracts](docs/INTEGRATION_CONTRACTS.md) for relevant decisions.
 
-- Stage 6 is the current scope. Do not implement Stage 7 or later without explicit request. AG Grid Community financial views are read-only and member-scoped. Never count pending or reversed captures as paid, fabricate event history, expose another member's identity/PayPal IDs, or change the Stage 5 PostgreSQL reservation constraints. Preserve the authenticated user-owned needs API.
+- Stage 7 is the final planned scope. Verify deployment readiness, real browser flows, and honest video/submission preparation without touching actual hosting accounts, charging accounts, publishing private credentials, or claiming a Devpost submission that has not happened. Preserve the Stage 6 member-only ledger and Stage 5 database exclusion constraint. Preserve the authenticated user-owned needs API.
 - Preserve the Next.js frontend / FastAPI backend architecture and stable `/api/v1` contracts.
 - Make minimal, scoped changes. Reuse existing components and dependencies; do not rewrite unrelated modules.
 - Keep TypeScript in `apps/web`, Python in `apps/api`, and architecture / handoff documents in `docs`.

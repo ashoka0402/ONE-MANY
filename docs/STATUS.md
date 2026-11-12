@@ -1,21 +1,22 @@
-# Stage 6 — AG Grid Community verified Sandbox contribution ledger
+# Stage 7 — Deployment and submission handoff
 
-Status: **Stage 6 complete at the automated build/test level**. Live provider credentials and browser-level QA remain deferred.
+Status: **Implementation and documentation committed; final CI/browser verification in progress. Real hosting, live provider QA, MP4/YouTube upload and Devpost submission are not yet completed.**
 
-## Implemented
+## Source changes
 
-- AG Grid Community 36.3.0 for authenticated member contributions and an append-only recorded event history; sort, filter, pagination and anonymized CSV export.
-- A read-only `GET /api/v1/funding/groups/{id}/ledger` API requiring accepted membership. Other accounts receive a 404; pending or missing captures do not count as verified.
-- Exact integer-minor-unit summary totals sourced from accepted `funding_members` plus previously server-verified `payment_attempts`; no new money records or PayPal network requests on GET.
-- Statuses distinguish `in_progress`, `reconciled` and `requires_review` without treating a Sandbox approval redirect or pending attempt as completed.
-- Append-only `funding_ledger_events` in Alembic revision `20261112_06`, keyed to prevent retry-driven duplicates. Events originate from group creation, joins, order creation, capture request, server-verified capture and signed webhook changes.
-- Event records expose only anonymous participant slots and server-recorded timestamps; sensitive PayPal IDs, payer emails, raw needs and tokens are excluded.
-- Existing Stage 1–5 API behavior, scheduling and payment endpoints remain in place.
+- Render Blueprint for a Python FastAPI API and demo PostgreSQL. Paid API tier for a safe pre-deploy Alembic migration; the free demo database is temporary. Deploying the blueprint requires separate account authorization and cost acceptance.
+- Server readiness endpoint `GET /api/v1/ready` validates live DB access, Alembic revision `20261112_06`, and the funding ledger table. `GET /health` remains a lightweight process-only endpoint.
+- Render-native `postgresql://` and `postgres://` driver strings normalized to `postgresql+psycopg://`; other drivers remain rejected. Sensitive URLs are not logged.
+- Browser reservation CORS preflight corrected to include HTTP PUT; API and Next.js security headers added; authenticated workspace set to `noindex`.
+- Independent, pinned Playwright Chromium suite: registration, real database need, opt-in, reload logout, and re-login. Runs from `apps/web/e2e` and may save screenshots as CI evidence.
+- Read-only deployment verifier script, honest deployment instructions, actual Flute process/scene storyboard and a copy-ready Devpost submission draft, without invented URLs or claims.
 
-## Trust boundaries
+## Not verified or not executed
 
-This is a **PayPal Sandbox test-merchant** ledger, not real money, escrow, bank settlement or proof of retailer acquisition. The ledger records prior verification rather than calling PayPal on every page view; past state changes before the Stage 6 audit migration are not invented. A refund/denial event can invalidate a previously completed member contribution and force review. Provider fixtures are test-only.
+- No Render or Vercel resource has been provisioned by these commits.
+- No real Gemini/Channel3/PayPal sandbox credentials were used in CI; real e2e payment is pending.
+- No Flute MP4, edited product video or public YouTube upload exists yet.
+- No Devpost form has been submitted; the user must publish the video and submit before the official deadline.
+- Rate limiting, independent commerce/escrow handling and physical fulfillment need further work before any actual public real-money service.
 
-## Automated and manual checks
-
-Stage 6's integration run [43167136166](https://github.com/ashoka0402/ONE-MANY/actions/runs/43167136166) passed React lint/typecheck and production build, Alembic revision `20261112_06`, a PostgreSQL-backed member-only ledger smoke and **50 backend tests**, but initially failed Ruff import order. The import has been fixed, the temporary npm lockfile step removed, and the permanent workflow now uses read-only permissions. Final verification is the subsequent clean CI run. Browser-level inspection and live PayPal/Gemini/Channel3 credential tests remain on the manual checklist.
+See [DEPLOYMENT.md](DEPLOYMENT.md), [DEMO_VIDEO.md](DEMO_VIDEO.md), [DEVPOST_SUBMISSION.md](DEVPOST_SUBMISSION.md) and [MANUAL_QA.md](MANUAL_QA.md).

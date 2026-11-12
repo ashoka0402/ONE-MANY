@@ -102,3 +102,12 @@ Returns `{group_id,product_title,group_state,currency,total_minor,total_display,
 - No PayPal order ID, capture ID, approval URL, member identity, password hash, raw need description or merchant URL is returned.
 
 The backend records keyed events transactionally with group/attempt updates. Unique keys are stable across duplicate calls: `group:`, `join:`, `order:`, `pending:`, `capture:`, and `webhook:`. Event keys and raw webhook payloads are *never* sent to the UI. The two AG Grid Community tables render this exact response without simulating rows or editing payment states. Exports use only anonymous visible fields.
+
+
+## Stage 7 — Deployment probe and browser contract
+
+- `GET /api/v1/health`: liveness only, publicly readable; not evidence of DB connectivity.
+- `GET /api/v1/ready`: publicly readable deployment readiness. Returns HTTP 200 `{"status":"ready","service":"one-many-api"}` only when an actual SQL session connects, `alembic_version` matches revision `20261112_06` and the funding ledger table exists; returns a safe HTTP 503 otherwise. Does not leak credentials or DB URL.
+- `OPTIONS /api/v1/funding/groups/{id}/reservation` with an allowed `Origin` and requested HTTP `PUT`: preflight accepts. Production does not allow wildcard origins; the browser origin must be specified in `CORS_ORIGINS`.
+- Backend responses to API requests have `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, and framing/referrer protections.
+- `scripts/check_deployment.py` is read-only and checks app routes, API health and readiness, anonymous account protection and actual cross-origin calendar preflight. It does not authorize payment or contact Gemini/Channel3/PayPal.

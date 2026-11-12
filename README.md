@@ -15,8 +15,18 @@ ONE / MANY is an AI-assisted shared-asset purchasing and scheduling prototype. P
 | 4 | Explicitly joined funding groups, PayPal Orders v2 Sandbox, verified capture ledger and signed webhook handling | PayPal Sandbox and PostgreSQL |
 | 5 | Bryntum Scheduler Community, authorized member reservations, edit/cancel, DB-level conflict prevention | PostgreSQL GiST exclusion constraint |
 | 6 | AG Grid Community contribution ledger, verified-capture totals, member-anonymous CSV exports and append-only audit events | PostgreSQL funding and payment records |
+| 7 | Deployment blueprint, database readiness, browser e2e regression, video and judge-facing submission pack | Render/Vercel deployment guide + Playwright CI |
 
 **Scope:** This is a hackathon prototype. PayPal Sandbox uses fake money; no real retailer order, escrow, legal shared ownership, automatic refund, verified physical handover or shipping is performed. All reservations are *provisional usage plans* rather than real-world inventory commitments.
+
+## Stage 7: run, verify and submit
+
+- **[Deployment guide](docs/DEPLOYMENT.md)** — Render API and Postgres Blueprint (paid API tier, costs reviewed before Apply) + Vercel frontend; exact public environment variables and a read-only hosted smoke check.
+- **[Chromium browser test](apps/web/e2e/)** — real account registration, persisted need, logout-by-refresh and re-login; isolated from real provider credentials.
+- **[Manual provider QA](docs/MANUAL_QA.md)** — genuinely verify Gemini, Channel3, PayPal Sandbox, AG Grid and Bryntum; automated mocks cannot replace this.
+- **[Flute demonstration storyboard](docs/DEMO_VIDEO.md)** — cinematic real-UI opening + actual browser capture footage; no video has been generated or uploaded merely by committing this plan.
+- **[Devpost submission copy](docs/DEVPOST_SUBMISSION.md)** — project description and mandatory links checklist; no submission has been made by this repository.
+- **Official deadline:** November 13, 2026 at 01:30 IST (November 12 at 12:00 PM PST). The published rules allow working local build instructions *instead of* hosting, but require public source with a license and public YouTube footage under three minutes.
 
 ## Run locally
 
@@ -87,6 +97,9 @@ Uses `@bryntum/scheduler-community` and `@bryntum/scheduler-react-community`, pi
 npm run lint:web
 npm run typecheck:web
 npm run build:web
+# Browser smoke after starting PostgreSQL and applying migrations:
+npm install --prefix apps/web/e2e
+npm --prefix apps/web/e2e test
 cd apps/api
 .\.venv\Scripts\python.exe -m pytest -q
 .\.venv\Scripts\python.exe -m ruff check .

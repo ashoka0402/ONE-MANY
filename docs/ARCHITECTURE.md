@@ -146,3 +146,25 @@ Next.js AG Grid Community (two read-only tables; sorting/filtering/CSV)
 **Writes** to `funding_ledger_events` occur only in the existing server-only funding transaction paths: group creation, explicit join, stored PayPal order, attempted capture, verified complete capture and signed refund/denial notifications. Globally unique `event_key` values prevent retries/replayed webhooks from doubling audit rows. Existing payment and webhook tables remain the financial state source; the audit events are observations and cannot themselves credit a member's balance.
 
 **Privacy and accuracy:** Group membership is checked before any read. Member lists show anonymous 1-based slot numbers and whether the slot belongs to the viewer; they never include another person's IDs, names, needs, email or PayPal credentials. Amounts are integer minor units. A group marked funded while missing captures is reported `requires_review`, not fraudulently fully funded. GET is side-effect-free, does not call the payment provider, and displays the recorded timestamp to avoid suggesting live bank settlement.
+
+
+## Stage 7 — Runtime deployment and browser verification
+
+```text
+Browser HTTPS → Vercel Next.js (apps/web)
+    | NEXT_PUBLIC_API_URL compiled into frontend at build time
+    | exact-origin CORS, including reservation PUT preflight
+    v
+Render FastAPI HTTPS (apps/api, render.yaml)
+    | ENVIRONMENT=production, server-only provider credentials
+    | GET /api/v1/health : process alive
+    | GET /api/v1/ready  : PostgreSQL + Alembic head checked
+    | Pre-deploy: alembic upgrade head (paid Render service)
+    v
+Render Postgres database (demo resource; not commercial persistence)
+    | models/revisions 20261112_01 through 20261112_06
+```
+
+The browser suite uses a *separate* Playwright dependency package in `apps/web/e2e`, keeps CI itself read-only, and exercises real front/backend/account flows against PostgreSQL. Screenshot evidence is generated only when the browser test runs. Third-party service calls are not fabricated as green browser interactions; live provider QA remains a manual prerequisite.
+
+The Render database connection string's native `postgresql://` dialect is normalized to the installed psycopg 3 SQLAlchemy driver before creating a pool. The API excludes sensitive details from errors/logs. All routing is Sandbox-only, and no PayPal credentials are shipped to Vercel.

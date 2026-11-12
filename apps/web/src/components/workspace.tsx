@@ -255,13 +255,13 @@ export function Workspace() {
           <div className="work-auth-copy">
             <span className="work-kicker"><Sparkles size={14} /> THE START OF SOMETHING SHARED</span>
             <h1>Have a need?<br /><em>Find your people.</em></h1>
-            <p>Tell us what you&apos;re looking for. Build a private list of needs today — collective purchasing comes next.</p>
+            <p>Tell us what you&apos;re looking for. Discover compatible needs, consider real products, and join funding only with your explicit consent.</p>
             <div className="work-orbit" aria-hidden="true">
               <span className="work-orbit-center">1</span>
               <span className="work-orbit-dot a" /><span className="work-orbit-dot b" /><span className="work-orbit-dot c" />
             </div>
           </div>
-          <span className="work-footnote">STAGE 4 · PAYPAL SANDBOX FUNDING</span>
+          <span className="work-footnote">PAYPAL SANDBOX · DEMONSTRATION</span>
         </section>
         <section className="work-auth-panel">
           <div className="work-auth-card">
@@ -319,7 +319,7 @@ export function Workspace() {
         <button className="work-logout" type="button" onClick={signOut}><LogOut size={16} /> Sign out</button>
       </aside>
       <div className="app-main">
-        <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">STAGE 5 · SHARED RESERVATIONS</span></header>
+        <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">ONE / MANY · SHARED WORKSPACE</span></header>
         <main id="main" className="work-main">
           <section className="work-intro">
             <div><p className="eyebrow"><span className="status-dot" /> THE FIRST STEP</p><h1>What&apos;s on your<br /><em>mind today?</em></h1><p>Describe what you need. AI can identify reusable items, then find possible shared ownership opportunities with your consent.</p></div>
@@ -434,7 +434,7 @@ export function Workspace() {
           <LedgerPanel token={token} />
           <ReservationPanel token={token} />
           <section id="next" className="work-next">
-            <div><span className="work-kicker">STAGE 6 · TRANSPARENT SHARED FUNDING</span><h2>Discovery becomes explicit participation.</h2><p>Compatible people can now join a funding group, approve their own Sandbox contribution, and verify captured amounts through PayPal. AG Grid now displays the recorded contribution ledger, including verified captures and reversals. Bryntum visualizes persisted, conflict-checked member calendars after funding verification. Physical purchase and handover still remain separate.</p></div>
+            <div><span className="work-kicker">ONE / MANY · EXPLAINABLE SHARING</span><h2>Discovery becomes explicit participation.</h2><p>Compatible people can now join a funding group, approve their own Sandbox contribution, and verify captured amounts through PayPal. AG Grid now displays the recorded contribution ledger, including verified captures and reversals. Bryntum visualizes persisted, conflict-checked member calendars after funding verification. Physical purchase and handover still remain separate.</p></div>
             <div className="work-next-icon" aria-hidden="true"><Users size={35} /></div>
           </section>
         </main>

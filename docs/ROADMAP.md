@@ -1,6 +1,6 @@
 # Roadmap
 
-Current stage: **6 — AG Grid verified Sandbox contribution ledger and recorded event history** (50 backend tests passed; final check-only CI verification). Stage 7 demo and delivery awaits authorization. Hackathon deadline: **November 13, 2026 at 01:30 IST**.
+Current stage: **7 — Deployment, Chromium e2e, security hardening, Flute video and Devpost handoff** (in progress). This is the final planned stage; external deployment, video upload and submission remain manual. Hackathon deadline: **November 13, 2026 at 01:30 IST**.
 
 | Stage | Scope | Acceptance criteria |
 | --- | --- | --- |
