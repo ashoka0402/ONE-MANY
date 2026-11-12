@@ -166,7 +166,7 @@ export function ReservationPanel({ token }: { token: string }) {
     <section className="reservation-section" id="scheduling" aria-labelledby="reservation-heading">
       <div className="reservation-head">
         <div>
-          <span className="work-kicker">05 / BRYNTUM COMMUNITY SCHEDULER</span>
+          <span className="work-kicker">05 / SHARED SCHEDULING · BRYNTUM</span>
           <h2 id="reservation-heading">One asset. Everyone&apos;s turn.</h2>
           <p>See agreed usage windows on one timeline. Each member manages only their own dates.</p>
         </div>
