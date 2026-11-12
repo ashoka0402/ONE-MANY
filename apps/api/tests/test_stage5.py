@@ -107,7 +107,10 @@ def accepted_group(ctx, monkeypatch):
     proposal = client.post(
         f"/api/v1/needs/{ids[0]}/proposals",
         headers=a,
-        json={"product_id": CATALOG_PRODUCT["id"], "offer_url": CATALOG_PRODUCT["offers"][0]["url"]},
+        json={
+            "product_id": CATALOG_PRODUCT["id"],
+            "offer_url": CATALOG_PRODUCT["offers"][0]["url"],
+        },
     )
     assert proposal.status_code == 201, proposal.text
     monkeypatch.setattr(
@@ -239,6 +242,7 @@ def test_existing_conflict_rejected_and_reversal_blocks_changes(ctx, monkeypatch
     # Insert a corrupt cross-member reservation in the test DB only to exercise
     # the API-level overlap guard in addition to PostgreSQL's independent GiST check.
     from uuid import UUID
+
     from one_many_api.models import FundingMember
 
     with sessions.begin() as db:

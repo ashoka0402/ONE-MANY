@@ -18,9 +18,20 @@ from sqlalchemy.orm import Session
 from one_many_api.auth import get_current_user
 from one_many_api.database import get_db
 from one_many_api.funding_routes import (
-    _assert_member, _group, _members, _proposal, _revalidate_members,
+    _assert_member,
+    _group,
+    _members,
+    _proposal,
+    _revalidate_members,
 )
-from one_many_api.models import AssetReservation, FundingGroup, FundingMember, Need, PaymentAttempt, User
+from one_many_api.models import (
+    AssetReservation,
+    FundingGroup,
+    FundingMember,
+    Need,
+    PaymentAttempt,
+    User,
+)
 
 reservation_router = APIRouter(prefix="/api/v1", tags=["shared-asset-scheduling"])
 
@@ -70,7 +81,9 @@ class ReservationBoardOut(BaseModel):
     notice: str = NOTICE
 
 
-def _board(db: Session, group: FundingGroup, member: FundingMember, user: User) -> ReservationBoardOut:
+def _board(
+    db: Session, group: FundingGroup, member: FundingMember, user: User
+) -> ReservationBoardOut:
     slots = {row.user_id: row.slot_index + 1 for row in _members(db, group.id)}
     need = db.get(Need, member.need_id)
     own_window = (
