@@ -38,3 +38,47 @@ test("real browser: registration, persisted need, and memory-only logout", async
   await page.locator("form.work-form").getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByText(needText, { exact: true })).toBeVisible();
 });
+
+
+test("dark demo: five navigable sections, interactive preview, and real-mode escape", async ({ page }) => {
+  const suffix = Date.now().toString(36);
+  await page.goto("/app");
+  await page.getByLabel("Display name").fill("Demo Tester");
+  await page.getByLabel("Email address").fill("demo-preview-" + suffix + "@example.com");
+  await page.getByLabel("Password").fill("demo-preview-password-not-real");
+  await page.locator("form.work-form").getByRole("button", { name: "Create account" }).click();
+  // The deployed build opens the real workspace first; the preview is explicitly optional.
+  if (await page.getByRole("button", { name: /Explore dark demo/i }).count()) {
+    await page.getByRole("button", { name: /Explore dark demo/i }).click();
+  }
+  await expect(page.getByRole("heading", { name: /Good to see you/i })).toBeVisible();
+  await expect(page.getByText("FICTIONAL DEMO").first()).toBeVisible();
+
+  await page.getByRole("button", { name: "Flip card for details" }).click();
+  await expect(page.getByText("Example equal share")).toBeVisible();
+  await page.getByRole("button", { name: "Next need" }).click();
+  await expect(page.getByText("Outdoor movie night", { exact: true }).first()).toBeVisible();
+
+  await page.getByRole("button", { name: /Your needs/ }).click();
+  await expect(page.getByText("PREWRITTEN CLASSIFICATION").first()).toBeVisible();
+  await page.getByRole("button", { name: /Match ready only/ }).click();
+  await expect(page.getByText("Weekend pressure washer")).toBeVisible();
+
+  await page.getByRole("button", { name: /Shared groups/ }).click();
+  await expect(page.getByText("The clean-up crew")).toBeVisible();
+  await page.getByRole("button", { name: /Contributions/ }).click();
+  await expect(page.getByText("67% scenario complete")).toBeVisible();
+
+  await page.getByRole("button", { name: /Contribution ledger/ }).click();
+  await expect(page.getByText("DEMO-1048")).toBeVisible();
+  await page.getByRole("button", { name: /Export demo CSV/ }).toBeVisible();
+
+  await page.getByRole("button", { name: /Scheduling/ }).click();
+  await expect(page.getByText("3 sample bookings")).toBeVisible();
+  await page.getByRole("button", { name: "Sat 21" }).click();
+  await expect(page.getByText("Portable projector", { exact: true })).toBeVisible();
+
+  await page.screenshot({ path: "test-results/emerald-demo-workspace.png", fullPage: true });
+  await page.getByRole("button", { name: /Live workspace/ }).last().click();
+  await expect(page.getByRole("heading", { name: "Add a new need" })).toBeVisible();
+});
