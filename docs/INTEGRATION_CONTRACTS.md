@@ -87,3 +87,18 @@ All endpoints are authenticated, group-member-only, under `/api/v1`.
 PostgreSQL enforces `UNIQUE(group_id,user_id)` and an active-only GiST exclusion on group and inclusive `daterange(start_date,end_date+1,'[)')`. The API additionally locks the group row for serialization and checks overlap; races are caught as HTTP 409. Missing funding, date conflicts, or stale versions are rejected, never silently displayed as success.
 
 This is a *provisional shared-use plan*, not a retailer purchase, verified physical inventory, handover contract, or timezone-precise reservation. The Bryntum timeline is read-only; the server is the only source of booking state.
+
+
+## Stage 6 — Read-only verified Sandbox contribution ledger
+
+`GET /api/v1/funding/groups/{group_id}/ledger` — authenticated, accepted funding member only. Never mutates state or calls PayPal. A non-member receives 404.
+
+Returns `{group_id,product_title,group_state,currency,total_minor,total_display,captured_minor,captured_display,outstanding_minor,outstanding_display,verified_members,accepted_members,target_members,progress_percent,reconciliation,as_of,members,events,has_more_events,notice}`.
+
+- `members[]`: `{slot,is_you,share_minor,share_display,captured_minor,captured_display,payment_state,last_updated_at}`. Slot is anonymous and 1-based; `not_started` is a genuine absence of a payment attempt, never a fabricated order.
+- `events[]`: `{id,recorded_at,event_type,source,member_slot,amount_minor,amount_display}` with at most 200 most recent observations and a `has_more_events` flag. This is an append-only history *from Stage 6 onward*, not a fictitious backfill.
+- `reconciliation`: `in_progress`, `reconciled`, or `requires_review`. A completed attempt only counts when it has the stored PayPal capture ID and matches the explicitly accepted share and currency. A reversed, pending or unmatched attempt contributes zero.
+- `progress_percent` is the integer percentage of the group's frozen target that has previously passed backend verification; it is not proof of current bank settlement.
+- No PayPal order ID, capture ID, approval URL, member identity, password hash, raw need description or merchant URL is returned.
+
+The backend records keyed events transactionally with group/attempt updates. Unique keys are stable across duplicate calls: `group:`, `join:`, `order:`, `pending:`, `capture:`, and `webhook:`. Event keys and raw webhook payloads are *never* sent to the UI. The two AG Grid Community tables render this exact response without simulating rows or editing payment states. Exports use only anonymous visible fields.

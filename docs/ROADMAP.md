@@ -1,6 +1,6 @@
 # Roadmap
 
-Current stage: **5 — Bryntum Community scheduling and server-enforced provisional reservations** (automated verification passed; Stage 6 AG Grid ledger awaits authorization). Hackathon deadline: **November 13, 2026 at 01:30 IST**.
+Current stage: **6 — AG Grid verified Sandbox contribution ledger and recorded event history** (automated verification in progress). Stage 7 demo and delivery awaits authorization. Hackathon deadline: **November 13, 2026 at 01:30 IST**.
 
 | Stage | Scope | Acceptance criteria |
 | --- | --- | --- |
@@ -10,7 +10,7 @@ Current stage: **5 — Bryntum Community scheduling and server-enforced provisio
 | 3 | Channel3/product proposals | Real API adapter, live-offer recheck, strict price validation, immutable owner-only draft snapshots and deterministic hypothetical splits; provider test fixtures in CI |
 | 4 | PayPal Sandbox funding | Implemented: explicit participant join, sandbox Orders v2 checkout, independent capture verification, idempotent retries, signed webhook handling, 41 passing backend tests and PostgreSQL smoke |
 | 5 | Bryntum scheduling | Real MIT-licensed Community v8 timeline, authenticated member-owned date-only booking, server-enforced no-overlap and PostgreSQL GiST exclusion constraint, cancel/version tests |
-| 6 | AG Grid ledger | Verified contribution data, ownership breakdown and auditable presentation |
+| 6 | AG Grid ledger | MIT Community edition, member-only anonymous contribution rows, exact verified capture totals, retry-idempotent append-only audit events and CSV exports, verified PostgreSQL/API tests |
 | 7 | Demo / delivery | Hosted functioning app or reproducible setup, end-to-end checkout demo, public GitHub license, <=3 minute YouTube video, Devpost |
 
 No future stage is authorized by this roadmap. Changes to financial records require deterministic rules and tests.

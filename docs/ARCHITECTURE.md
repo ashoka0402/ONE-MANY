@@ -119,3 +119,30 @@ Committed booking or HTTP 409, never a silent local-only calendar mutation
 ```
 
 The booking API uses **inclusive whole civil calendar dates**, not timestamps. Bryntum receives an exclusive end date (the next local calendar day) to display the correct full-day bar. The domain does not invent an IANA timezone, physical delivery, or handover interval. The timeline is a representation of accepted members' provisional usage plans and is not a claim of actual asset availability. Cancellation is allowed during payment review; new bookings are not.
+
+
+## Stage 6 — Payment ledger snapshot and append-only observations
+
+```text
+Authenticated funding group member
+  | GET /funding/groups/{id}/ledger
+  v
+FastAPI _group + _assert_member ownership checks (read-only)
+  |
+  +-- funding_members -> accepted slot + agreed share (source of truth)
+  +-- payment_attempts -> completed + nonempty capture ID + exact agreed share
+  |      - only then counted as a previously verified Sandbox capture
+  |      - pending/reversed/failed/never-started -> 0 verified
+  +-- funding_ledger_events -> append-only observed transitions
+  |      - events begin Stage 6, no fabricated history
+  v
+Single immutable response: totals, accepted/verified counts,
+  reconciliation state, anonymous member slots, recorded event history
+  |
+  v
+Next.js AG Grid Community (two read-only tables; sorting/filtering/CSV)
+```
+
+**Writes** to `funding_ledger_events` occur only in the existing server-only funding transaction paths: group creation, explicit join, stored PayPal order, attempted capture, verified complete capture and signed refund/denial notifications. Globally unique `event_key` values prevent retries/replayed webhooks from doubling audit rows. Existing payment and webhook tables remain the financial state source; the audit events are observations and cannot themselves credit a member's balance.
+
+**Privacy and accuracy:** Group membership is checked before any read. Member lists show anonymous 1-based slot numbers and whether the slot belongs to the viewer; they never include another person's IDs, names, needs, email or PayPal credentials. Amounts are integer minor units. A group marked funded while missing captures is reported `requires_review`, not fraudulently fully funded. GET is side-effect-free, does not call the payment provider, and displays the recorded timestamp to avoid suggesting live bank settlement.

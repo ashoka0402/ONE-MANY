@@ -11,4 +11,5 @@ This is a checklist, **not evidence** that these steps have been performed.
 - [ ] If deployed, configure HTTPS `PUBLIC_WEB_URL`, a webhook listener and Sandbox `PAYPAL_WEBHOOK_ID`; confirm signature verification, event replay and a reversal path.
 - [ ] Open the Bryntum Community timeline for each member, save a subset of their own need dates, verify both accounts see the persisted booking, then edit and cancel it. Confirm date-range rejection, member isolation, and all-day rendering.
 - [ ] Verify responsiveness, contrast, keyboard navigation, reduced-motion handling, reload persistence (with login re-entry), and full screenshots in real browsers.
-- [ ] Build the Stage 6 AG Grid verified contributions interface if authorized, then complete deployment, a reproducible demo, Flute video and Devpost submission.
+- [ ] Load AG Grid Community contribution ledgers for each member. Verify exact accepted shares, completed-capture totals, no pending-credit inflation, anonymous CSV contents, sorting/filtering and event-history ordering. Test a signed refund and review-state display.
+- [ ] Complete deployment, a reproducible demo, Flute video and Devpost submission.

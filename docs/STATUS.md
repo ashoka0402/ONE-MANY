@@ -1,23 +1,21 @@
-# Stage 5 — Bryntum scheduling and shared-use reservations
+# Stage 6 — AG Grid Community verified Sandbox contribution ledger
 
-Status: **Stage 5 complete at the automated build/test level**. Browser-level and live third-party QA remain deferred.
+Status: **Implemented in source, automated verification pending final CI**. Live provider credentials and browser-level QA remain deferred.
 
 ## Implemented
 
-- Bryntum Scheduler Community v8 (MIT, public npm) inside a client-only Next.js timeline, without a commercial license key.
-- Client displays *real authenticated reservation rows* as read-only scheduler events; no fictional demo events or hardcoded booking data.
-- Date-only REST APIs: GET reservations, PUT the caller's own reservation with an optimistic version, DELETE/cancel the caller's reservation.
-- Booking permitted only for an explicitly accepted group with all independently verified Sandbox captures and matching total. Need eligibility and non-overlapping member windows are revalidated.
-- Reservations restricted to the caller's own need window; only one active booking per group/member; only members may view anonymous slot labels.
-- Cancelled rows remain in the database with incremented versions, but disappear from the shared active timeline. An owning member can rebook using the returned `own_version`.
-- Group-row locking and an independent PostgreSQL GiST exclusion constraint prevent concurrent overlapping active date windows.
-- A `needs_review` group blocks edits/new reservations but permits cleanup cancellation.
-- Tests cover authorization, unfunded state, stale versions, invalid date windows, cancellation/rebooking, privacy, app-level conflicts and DB-level overlap exclusion.
+- AG Grid Community 36.3.0 for authenticated member contributions and an append-only recorded event history; sort, filter, pagination and anonymized CSV export.
+- A read-only `GET /api/v1/funding/groups/{id}/ledger` API requiring accepted membership. Other accounts receive a 404; pending or missing captures do not count as verified.
+- Exact integer-minor-unit summary totals sourced from accepted `funding_members` plus previously server-verified `payment_attempts`; no new money records or PayPal network requests on GET.
+- Statuses distinguish `in_progress`, `reconciled` and `requires_review` without treating a Sandbox approval redirect or pending attempt as completed.
+- Append-only `funding_ledger_events` in Alembic revision `20261112_06`, keyed to prevent retry-driven duplicates. Events originate from group creation, joins, order creation, capture request, server-verified capture and signed webhook changes.
+- Event records expose only anonymous participant slots and server-recorded timestamps; sensitive PayPal IDs, payer emails, raw needs and tokens are excluded.
+- Existing Stage 1–5 API behavior, scheduling and payment endpoints remain in place.
 
-## Test status
+## Trust boundaries
 
-[GitHub Actions run 43164775217](https://github.com/ashoka0402/ONE-MANY/actions/runs/43164775217) passed **45 Python tests**, Ruff lint, frontend ESLint and TypeScript, Next.js production build with Bryntum Community v8, Alembic migration `20261112_05` against PostgreSQL, authenticated reservation write/read smoke, a deliberate GiST overlap violation, and Compose validation. Temporary dependency lockfile generation was removed from the permanent workflow; CI is read-only.
+This is a **PayPal Sandbox test-merchant** ledger, not real money, escrow, bank settlement or proof of retailer acquisition. The ledger records prior verification rather than calling PayPal on every page view; past state changes before the Stage 6 audit migration are not invented. A refund/denial event can invalidate a previously completed member contribution and force review. Provider fixtures are test-only.
 
-## Deferred manual checks
+## Automated and manual checks
 
-Live Gemini and Channel3 keys, PayPal Sandbox buyer authorizations/capture, incoming verified webhooks, cross-browser Bryntum visual checks and deployment are intentionally reserved for the final validation. No physical asset has been delivered; all bookings are provisional.
+The Stage 6 CI run verifies React build, Python tests, Ruff, a live PostgreSQL migration and owner-scoped ledger smoke. Browser-level visual inspection and live PayPal/Gemini/Channel3 credential verification remain on the final manual checklist.
