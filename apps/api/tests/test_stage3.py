@@ -1,7 +1,6 @@
 """Stage 3 provider contracts and financial math use isolated test fixtures only."""
 
 from decimal import Decimal
-from unittest.mock import patch
 
 import httpx
 import pytest
