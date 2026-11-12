@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     gemini_model: str = Field(default="gemini-2.5-flash", pattern=r"^gemini-[a-zA-Z0-9._-]+$")
     gemini_timeout_seconds: float = Field(default=12.0, ge=2, le=30)
     match_candidate_limit: int = Field(default=300, ge=10, le=2000)
+    channel3_api_key: SecretStr | None = None
+    channel3_country: str = Field(default="US", pattern=r"^[A-Z]{2}$")
+    channel3_currency: str = Field(default="USD", pattern=r"^[A-Z]{3}$")
+    channel3_timeout_seconds: float = Field(default=12.0, ge=3, le=30)
+    max_proposal_participants: int = Field(default=8, ge=2, le=30)
 
     @model_validator(mode="after")
     def credentials_for_production(self) -> "Settings":

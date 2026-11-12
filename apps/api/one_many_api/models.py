@@ -96,3 +96,40 @@ class NeedIntent(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     need: Mapped[Need] = relationship(back_populates="intent")
+
+
+class PurchaseProposal(Base):
+    """Immutable, unapproved catalog quote snapshot; no participant is charged."""
+
+    __tablename__ = "purchase_proposals"
+    __table_args__ = (
+        CheckConstraint("price_minor > 0", name="ck_proposals_positive_price"),
+        CheckConstraint("prospective_members >= 2", name="ck_proposals_min_members"),
+        CheckConstraint("status IN ('draft', 'cancelled')", name="ck_proposals_status"),
+        Index("ix_proposals_owner_created", "owner_id", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    owner_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
+    )
+    need_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("needs.id", ondelete="RESTRICT"), nullable=False
+    )
+    need_source_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    channel3_product_id: Mapped[str] = mapped_column(String(250), nullable=False)
+    product_title: Mapped[str] = mapped_column(String(500), nullable=False)
+    product_image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    merchant_domain: Mapped[str] = mapped_column(String(255), nullable=False)
+    merchant_url: Mapped[str] = mapped_column(Text, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    price_minor: Mapped[int] = mapped_column(nullable=False)
+    prospective_members: Mapped[int] = mapped_column(nullable=False)
+    share_amounts_minor: Mapped[list[int]] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="draft", server_default="draft"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    quote_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

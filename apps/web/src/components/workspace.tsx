@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useState } from "react";
 import Link from "next/link";
+import { CatalogPanel, ProposalHistory } from "@/components/catalog-panel";
 import {
   ArrowLeft,
   ArrowRight,
@@ -313,7 +314,7 @@ export function Workspace() {
         <button className="work-logout" type="button" onClick={signOut}><LogOut size={16} /> Sign out</button>
       </aside>
       <div className="app-main">
-        <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">STAGE 2 · LIVE MATCHING</span></header>
+        <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">STAGE 3 · REAL PRODUCT DATA</span></header>
         <main id="main" className="work-main">
           <section className="work-intro">
             <div><p className="eyebrow"><span className="status-dot" /> THE FIRST STEP</p><h1>What&apos;s on your<br /><em>mind today?</em></h1><p>Describe what you need. AI can identify reusable items, then find possible shared ownership opportunities with your consent.</p></div>
@@ -405,6 +406,14 @@ export function Workspace() {
                           {matchResults[need.id].candidates_limited && <small>Search limit reached; there may be additional opportunities.</small>}
                         </div>
                       )}
+                      {need.status === "open" && need.intent?.shareable && need.discoverable && (
+                        <CatalogPanel
+                          key={need.id + need.request_text}
+                          needId={need.id}
+                          token={token}
+                          potentialMembers={matchResults[need.id]?.potential_members ?? null}
+                        />
+                      )}
                       <div className="work-need-actions">
                         <button disabled={needBusy} onClick={() => { setEditingId(need.id); setEditingText(need.request_text); }}><Pencil size={14} /> Edit</button>
                         <button disabled={needBusy} onClick={() => void updateNeed(need.id, { status: need.status === "open" ? "archived" : "open" })}>{need.status === "open" ? "Archive" : "Reopen"}</button>
@@ -415,8 +424,9 @@ export function Workspace() {
               {needs.length >= 100 && <p className="work-helper">Displaying the latest 100 needs; API pagination is available.</p>}
             </section>
           </div>
+          <ProposalHistory token={token} />
           <section id="next" className="work-next">
-            <div><span className="work-kicker">STAGE 2 · INTERPRET AND DISCOVER</span><h2>Different needs. A possible shared solution.</h2><p>Gemini extracts reusable asset requirements; deterministic rules identify potential neighbors without exposing their identities. Actual products, prices, PayPal payments and scheduling arrive in later stages.</p></div>
+            <div><span className="work-kicker">STAGE 2 · INTERPRET AND DISCOVER</span><h2>Different needs. A possible shared solution.</h2><p>Gemini extracts reusable asset requirements; deterministic rules identify potential neighbors without exposing their identities. Channel3 now provides real merchant products and draft price snapshots. PayPal payments and actual scheduling arrive in later stages.</p></div>
             <div className="work-next-icon" aria-hidden="true"><Users size={35} /></div>
           </section>
         </main>

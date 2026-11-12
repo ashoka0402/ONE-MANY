@@ -45,3 +45,10 @@ A need is private by default (discoverable=false), including all Stage 1 migrate
 Asynchronous/background workers, catalog data, group creation, pricing and payment states are intentionally deferred. The provider call is synchronous with a bounded timeout. The UI shows failed/unconfigured provider calls clearly; do not turn errors into pretend successful AI. Strict terms and semantic safety are not guaranteed by LLM output; real product suitability requires Stage 3 verification.
 
 Stage 2 verification passed in GitHub Actions run 43089572828, including 28 Python tests and a live PostgreSQL migration and anonymized matching smoke. The one-time code formatter has been removed from permanent CI; check-only jobs use read-only permissions. Live Gemini credentials and visual browser QA were not available in CI and must not be reported as tested.
+
+
+## Stage 3 — Authentic catalogue offers and strictly hypothetical cost allocation
+
+Use Channel3's official REST contract directly, with `x-api-key` in the FastAPI backend only. `POST /v1/search` returns product candidates; `GET /v1/products/{id}` refreshes the chosen merchant offer before a quote is persisted. Never trust amount, currency, product title, availability or member count from the browser. Ignore unknown currencies, prices with excessive fractional precision, non-HTTPS URLs and non-in-stock offers. Only validated offers can be proposed.
+
+An explicit, consented area/asset match is required for a draft; matched peers did not opt into buying and cannot be charged. Deterministic shares use integer minor units and allocate the remainder without inventing discounts or exchange rates. Proposed savings are upper-bound arithmetic under the stated assumption of separate identical purchases, not achieved savings. A 30-minute quote expiration and permanent historical snapshot prevent a stale price being represented as live. Stage 4 must independently re-confirm all finance/participation conditions before any payments.

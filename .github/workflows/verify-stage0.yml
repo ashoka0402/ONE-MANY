@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   checks:
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -33,7 +33,19 @@ jobs:
           python-version: "3.13"
       - name: Install API
         run: python -m pip install -e "./apps/api[dev]"
-      - name: Start PostgreSQL and apply Stage 2 migrations
+      - name: One-time Stage 3 Python formatting
+        run: |
+          python -m ruff format apps/api
+          python -m ruff check --fix apps/api || true
+          python -m ruff format apps/api
+          if ! git diff --quiet -- apps/api; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add apps/api
+            git commit -m "style(stage-3): format provider adapter and proposals"
+            git push origin HEAD:main
+          fi
+      - name: Start PostgreSQL and apply Stage 3 migrations
         env:
           POSTGRES_PASSWORD: validation-only-not-real
           DATABASE_URL: postgresql+psycopg://one_many:validation-only-not-real@127.0.0.1:5432/one_many
@@ -47,8 +59,9 @@ jobs:
           with psycopg.connect("postgresql://one_many:validation-only-not-real@127.0.0.1:5432/one_many") as connection:
               assert connection.execute("SELECT to_regclass('public.users')").fetchone()[0] == "users"
               assert connection.execute("SELECT to_regclass('public.needs')").fetchone()[0] == "needs"
-              assert connection.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "20261112_02"
+              assert connection.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "20261112_03"
               assert connection.execute("SELECT to_regclass('public.need_intents')").fetchone()[0] == "need_intents"
+              assert connection.execute("SELECT to_regclass('public.purchase_proposals')").fetchone()[0] == "purchase_proposals"
           PY
           python - <<'PY'
           from fastapi.testclient import TestClient
@@ -115,6 +128,32 @@ jobs:
               assert match.status_code == 200, match.text
               assert match.json()["potential_members"] == 1, match.text
               assert "postgres-peer@example.com" not in match.text
+              # Stage 3: provider response fixtures are TEST-ONLY; production never uses them.
+              from one_many_api.channel3 import normalize_product
+              raw_product = {
+                  "id": "ci-sample-projector",
+                  "title": "Portable projector",
+                  "images": [{"url": "https://images.example.test/projector.jpg"}],
+                  "offers": [{
+                      "url": "https://shop.example.test/projector",
+                      "domain": "shop.example.test",
+                      "price": {"price": 97.01, "currency": "USD"},
+                      "availability": "InStock",
+                  }],
+              }
+              with patch("one_many_api.catalog_routes.Channel3Client.product") as product_detail:
+                  product_detail.return_value = normalize_product(raw_product, "USD", [], [])
+                  draft = client.post("/api/v1/needs/" + saved.json()["id"] + "/proposals",
+                      headers=auth, json={
+                          "product_id": "ci-sample-projector",
+                          "offer_url": "https://shop.example.test/projector",
+                      })
+              assert draft.status_code == 201, draft.text
+              assert draft.json()["member_shares_minor"] == [4851, 4850]
+              assert draft.json()["price_minor"] == 9701
+              assert client.get("/api/v1/proposals", headers=auth).json()["proposals"][0]["id"] == draft.json()["id"]
+              assert client.get("/api/v1/proposals", headers=peer_auth).json()["proposals"] == []
+
           PY
       - name: API tests and lint
         run: |

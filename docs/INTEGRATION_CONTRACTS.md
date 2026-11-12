@@ -49,3 +49,13 @@ AI outputs must be parsed/validated and cannot charge or fund a group. Channel3 
 `GET /api/v1/needs/{uuid}/matches` requires the caller to own an open, opted-in, located, successfully AI-analyzed reusable need. The response includes `need_id` (caller-owned), `asset_type`, `area` (caller-supplied), `potential_members`, `non_overlapping_schedules`, `scheduling_confirmation_required`, `candidates_limited`, `status` and `explanation`. The response intentionally never includes peer IDs, raw requests, dates, or account details.
 
 Match admission: same AI-normalized asset label and normalized self-reported area; different owners; opt-in on both sides; non-archived; shareable extraction; no direct feature contradiction; no overlapping full-day windows. Missing date bounds count as requiring confirmation. This is a *candidate discovery* result only; cannot be treated as a product selection, reservation, purchase group, payment, or verified geographic proximity.
+
+
+## Stage 3 — Channel3 and draft shared-purchase quotes
+
+- `POST /api/v1/needs/{need_id}/products/search` (owner, opt-in, open, AI-analyzed reusable asset with area): calls real Channel3 `POST /v1/search` with a canonical asset + explicit required features, configurable country/currency. Returns normalized products, in-stock retailer offers with positive exact price and HTTPS link, feature-evidence warnings, and real retrieval timestamp. No provider credentials in response.
+- `POST /api/v1/needs/{need_id}/proposals` body `{"product_id":"<real Channel3 id>","offer_url":"<exact listed retailer URL>"}`: rechecks Stage 2 matching, requires at least one prospective peer, re-fetches product detail with Channel3 `GET /v1/products/{id}`, checks exact current offer, rejects contradictions/unsupported feature evidence and constructs a persisted `draft`. Client-supplied prices are not used.
+- `GET /api/v1/proposals`: list up to 50 owner-only draft quote snapshots.
+- `GET /api/v1/proposals/{id}`: returns only caller's draft; others receive 404.
+
+Proposal response includes owner-owned need ID, provider product ID, merchant link, actual price/currency, prospect count, exact integer-minor-unit shares, hypothetical savings, quote expiry and disclaimers. No actual buyer commitments, fees or shipping are included. Future payment flows MUST reconfirm the price, offer, peer membership/consent, scheduling and amount before creating any PayPal order. No escrow, purchase, or PayPal charge is initiated.

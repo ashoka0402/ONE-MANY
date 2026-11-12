@@ -40,3 +40,30 @@ Anonymous potential-member count + schedule confirmation requirements
 - Stage 3 will introduce product/real-catalog data; Stage 4 adds financial state machines; do not create those schemas now.
 
 See [INTEGRATION_CONTRACTS](INTEGRATION_CONTRACTS.md) and [STATUS](STATUS.md).
+
+
+## Stage 3 catalog and pricing architecture
+
+```text
+Owned, opted-in, AI-analyzed reusable need
+   | POST /needs/{id}/products/search — explicit search action
+   v
+Channel3 REST API (server key) → validated product/merchant offers
+   | one of the returned product IDs + URLs selected by owner
+   v
+POST /needs/{id}/proposals
+   |
+   +-- re-check owner and source-hash freshness
+   +-- re-run Stage 2 anonymized potential-member count
+   +-- fetch Channel3 product detail fresh by exact ID
+   +-- compare exact selected HTTPS offer URL against provider records
+   +-- require in-stock, supported currency, valid price and no exclusions
+   +-- compute integer-minor-unit equal shares (sum == price)
+   v
+purchase_proposals — immutable unapproved quote snapshots
+   |
+   v
+GET /proposals — owner only
+```
+
+Business constraints: product search does not auto-purchase. Only a server-validated real retailer offer can produce a draft; browser amount fields are not trusted. Matching members are prospective, not committed. The price snapshot expires after 30 minutes and Stage 4 must revalidate offer amount/currency, participants and terms before any PayPal action. No credit card or PayPal token is handled in Stage 3.

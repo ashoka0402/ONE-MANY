@@ -2,46 +2,43 @@
 
 **Many people. One smarter purchase.**
 
-ONE / MANY is an AI-powered shared-ownership prototype. Stage 2 implements **opt-in, anonymous demand discovery** backed by a real Gemini structured-output adapter and conservative, deterministic matching rules. It does **not** buy products, coordinate reservations, or collect PayPal payments yet.
+ONE / MANY helps people discover compatible requests and propose shared purchases. Stage 3 integrates **real Channel3 product searches and offer rechecks** with persistent, deterministic draft cost-sharing quotes. There is no PayPal charge or physical purchase in this stage.
 
-## Implemented now
+## What is actually implemented
 
-- Account authentication and persisted private needs (Stage 1).
-- Analyze a need with Gemini and store validated structured intent on the backend. Extraction is **not** hardcoded, and failed/unconfigured provider calls never create fabricated results.
-- Explicit per-need permission to include it in neighborhood discovery; private by default.
-- Compare only consented, open needs from different accounts with the same AI-normalized reusable asset label and self-reported area; reject explicit feature contradictions and overlapping known dates.
-- Return anonymous match counts and scheduling uncertainty, not other users' names, raw requests, IDs, or email addresses.
+- Stage 1: registered accounts, password hashing, private PostgreSQL needs and API ownership checks.
+- Stage 2: opt-in anonymous matching, real Gemini structured extraction and conservative feature/date/area gates.
+- Stage 3: **Channel3 REST API** with server-only API key, search and product detail lookup, real normalized merchant offers, valid in-stock currency/price filtering, quote snapshots based on potential matches, exact minor-unit allocation, and authenticated draft history.
+- Browser workspace: click Analyze, opt in, Find potential matches, Find products, select an in-stock merchant offer, Save draft quote, Load saved drafts.
+- If Channel3 or Gemini credentials are missing, the corresponding endpoint returns 503. Neither provider has a hardcoded production fallback.
 
-[Current status](docs/STATUS.md) · [Roadmap](docs/ROADMAP.md) · [Architecture](docs/ARCHITECTURE.md) · [API contracts](docs/INTEGRATION_CONTRACTS.md) · [Decisions](docs/DECISIONS.md)
+[Status](docs/STATUS.md) · [Architecture](docs/ARCHITECTURE.md) · [Integration contracts](docs/INTEGRATION_CONTRACTS.md) · [Roadmap](docs/ROADMAP.md)
 
-## Requirements
+## Setup
 
-- Node.js 22.12+ and npm
-- Python 3.12+
-- PostgreSQL 17 via Docker Compose
-- A **real Gemini API key** (server-side only) for live analysis. Without it, account management continues to work but analysis returns 503. No invented fallback is used.
-
-## Local setup (PowerShell)
-
-From the repository root:
+Use Node 22.12+, Python 3.12+, Docker Compose and PostgreSQL. From repository root, set up the DB:
 
 ```powershell
 Copy-Item .env.example .env
-# Choose a strong local POSTGRES_PASSWORD in the root .env
+# Configure a unique POSTGRES_PASSWORD in root .env.
 docker compose up -d --wait postgres
-cd apps/api
+```
+
+From `apps/api`:
+
+```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 Copy-Item .env.example .env
-# Set DATABASE_URL to match the root password (URL-encode special characters)
-# Generate AUTH_SECRET: python -c "import secrets; print(secrets.token_urlsafe(48))"
-# Set GEMINI_API_KEY in apps/api/.env using your own Google AI Studio key.
-# GEMINI_MODEL defaults to gemini-2.5-flash (change if your account uses another supported model)
+# Configure DATABASE_URL, AUTH_SECRET, GEMINI_API_KEY, CHANNEL3_API_KEY
+# Never commit apps/api/.env
 .\.venv\Scripts\python.exe -m alembic upgrade head
-.\.venv\Scripts\python.exe -m uvicorn one_many_api.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
+.\.venv\Scripts\python.exe -m uvicorn one_many_api.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Start the frontend from a second terminal in the root directory:
+Set `CHANNEL3_COUNTRY=US` and `CHANNEL3_CURRENCY=USD` for the default demo, or use a supported country/currency pair. The API rejects mismatched currencies in offers and does not perform FX conversion. Channel3 developer account: https://trychannel3.com/developers.
+
+In another terminal, from repository root:
 
 ```powershell
 npm ci --prefix apps/web
@@ -49,9 +46,7 @@ Copy-Item apps/web/.env.example apps/web/.env.local
 npm run dev:web
 ```
 
-Open http://localhost:3000/app. Register a user, create a need, optionally enable anonymous discovery, click **Analyze with Gemini**, and then **Find potential matches**. To observe a real match, register a second user with a compatible asset request and the same area label, enable discovery on that need, and analyze it. Use two different time windows to avoid a date conflict.
-
-No API key is committed to GitHub or included in browser bundles. Only clicking Analyze sends that request text to the configured AI provider. There are no scripted, hardcoded demo matching responses in the application.
+Visit http://localhost:3000/app. To draft a shared purchase, create two accounts with different nonoverlapping date windows in the same self-reported area, opt into discovery for both needs, and analyze them. On the first account, Find potential matches, Find products, then choose an eligible Channel3 offer and Save draft quote.
 
 ## Checks
 
@@ -65,17 +60,10 @@ cd apps/api
 .\.venv\Scripts\python.exe -m alembic current
 ```
 
-GitHub Actions validates all of the above except a real Gemini API request (which requires a private API key); it also runs the migrations against PostgreSQL and exercises authenticated, database-backed matching with a **test-only** deterministic AI fixture.
+GitHub CI tests the provider HTTP contract using mocks (not fake production responses), validates the PostgreSQL migration and builds an authenticated, persisted quote against a deterministic test fixture.
 
-## API
+## Safety and scope
 
-Open http://localhost:8000/docs. Stage 1 authentication and owned-needs endpoints remain intact.
+Quotes are **draft price snapshots**, not verified local shipping costs, investments, escrow, binding group commitments, actual savings, or payment requests. Participants in a quote are derived from compatible opted-in *potential* members and have **not accepted or funded anything**. Hypothetical savings assume each person otherwise would have bought the exact same product. Offers, availability, taxes, shipping, ownership agreements and costs must be rechecked before any real payment. Stage 4 will use PayPal Sandbox only.
 
-- `POST /api/v1/needs/{id}/analyze` — authenticated, owner-only; calls Gemini and caches by request text/model.
-- `GET /api/v1/needs/{id}/matches` — authenticated, owner-only; requires discoverable/open/AI-analyzed/shareable need with an area. Returns only aggregate anonymized counts.
-- `PATCH /api/v1/needs/{id}` supports `{"discoverable":true}` or `{"discoverable":false}` and invalidates the AI cache if the request description changes.
-- `POST /api/v1/needs` accepts `"discoverable":true|false`; omitted defaults to **false**.
-
-**Limitations:** Asset labels are model-generated and exact-match normalized, not embedding-based. Equivalent synonyms may be missed; the system deliberately favors precision over ungrounded matches. Area labels are normalized but **not geocoded**, so a matching label does not verify physical proximity. Overlapping whole-day windows are excluded; missing dates leave scheduling unresolved. No product catalog, pricing, ownership agreement or confirmed compatibility has been established. Consent and account controls are appropriate for a prototype, not a production marketplace.
-
-MIT licensed: [LICENSE](LICENSE).
+[MIT License](LICENSE).
