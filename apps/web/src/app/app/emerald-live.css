@@ -1,0 +1,93 @@
+/* Dark emerald / mint theme for the REAL ONE / MANY workspace.
+   This deliberately leaves the public landing page unchanged. */
+.app-layout{--green:#82e7b3;--light:#edf9f0;--muted:#a0b7a8;--stroke:rgba(222,250,225,.16);min-height:100vh;color:var(--light);background:radial-gradient(ellipse at 55% 0%,#243d2d 0%,transparent 38%),#07130d}
+.app-layout .app-sidebar{background:linear-gradient(150deg,#1c3426,#0d1b13 65%);border-right:1px solid var(--stroke);padding:29px 17px;min-height:100vh;position:sticky;top:0;align-self:flex-start}
+.app-layout .wordmark{color:#eef9f0;letter-spacing:-.7px}.app-layout .wordmark span{color:var(--green)}
+.app-layout .workspace-label{color:#82a591;margin:43px 0 13px}
+.app-layout .app-sidebar nav{gap:5px}
+.app-layout .app-sidebar nav a{color:#b1c6b5;border-radius:12px;font-size:12px;transition:background .18s,color .18s;padding:13px 12px}
+.app-layout .app-sidebar nav a:hover{color:#edfff1;background:rgba(135,236,178,.11)}
+.app-layout .app-sidebar nav a.active{background:#79e0aa;color:#0f2d1d;font-weight:750}
+.work-tour-link,.work-tour-topbutton{display:flex;align-items:center;justify-content:center;gap:8px;min-height:42px;background:#234d35;color:#a7f6c9;border:1px solid #44775a;border-radius:12px;font-size:11px;font-weight:760;transition:background .18s,transform .18s}
+.work-tour-link{margin-bottom:20px;padding:9px}.work-tour-topbutton{padding:9px 14px}.work-tour-link:hover,.work-tour-topbutton:hover{background:#346c4a;transform:translateY(-1px)}
+.app-layout .work-sidebar-profile{border-top:1px solid var(--stroke);color:#eaf7eb;margin-top:auto;padding-top:19px}.app-layout .work-sidebar-profile span{color:#90a994}.app-layout .work-avatar{background:#a3f0c3;color:#132e1e}
+.app-layout .work-logout{border-top:1px solid var(--stroke);color:#b0cbb7}.app-layout .work-logout:hover{color:#f5fff6}
+.app-layout .app-main{background:radial-gradient(ellipse at 32% 6%,rgba(92,147,99,.13),transparent 45%),linear-gradient(130deg,rgba(22,37,27,.88),#09160e);min-width:0}
+.app-layout .app-topbar{background:rgba(8,22,13,.44);border-color:var(--stroke);color:#91aa9b;height:83px}.app-layout .app-topbar strong{color:#edf7ee}
+.app-layout .work-main{max-width:1500px;padding:45px clamp(22px,3vw,58px) 90px}
+.app-layout .work-intro h1{color:#f0f9ed;font-weight:600}.app-layout .work-intro h1 em{color:#87e9b5}.app-layout .work-intro .eyebrow{color:#84dfaa}.app-layout .work-intro .status-dot{background:#8beaaf}
+.app-layout .work-intro p:not(.eyebrow){color:#adc2b1}
+.app-layout .work-kicker{color:#93e3b5}
+.app-layout .work-count,.app-layout .work-create-card,.app-layout .work-list-card,.app-layout .catalog-history,.app-layout .funding-panel,.app-layout .ledger-panel,.app-layout .reservation-section{background:linear-gradient(125deg,rgba(41,65,45,.58),rgba(9,24,15,.84));border:1px solid var(--stroke);border-radius:20px;color:#edf9f0;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.app-layout .work-count strong{color:#eefcf0}.app-layout .work-count span{color:#9cb2a0}
+.app-layout .work-card-title h2,.app-layout .funding-heading h2,.app-layout .reservation-head h2,.app-layout .ledger-head h2,.app-layout .catalog-history h2{color:#edf9ef}
+.app-layout .work-helper,.app-layout .work-empty,.app-layout .funding-heading p,.app-layout .reservation-head p,.app-layout .ledger-head p,.app-layout .catalog-history>p{color:#a9bdac}
+.app-layout .work-empty h3{color:#e4f4e9}
+.app-layout .work-form label,.app-layout .work-edit-form label,.app-layout .funding-box label,.app-layout .reservation-fields label{color:#c7dfcb}
+.app-layout .work-form input,.app-layout .work-form textarea,.app-layout .work-edit-form textarea,.app-layout .funding-box input,.app-layout .funding-box select,.app-layout .reservation-fields input,.app-layout .catalog-offer-label select{background:#10251a;border:1px solid #3c6048;border-radius:10px;color:#f0fff2}
+.app-layout input::placeholder,.app-layout textarea::placeholder{color:#7d9a87}
+.app-layout input:focus-visible,.app-layout textarea:focus-visible,.app-layout select:focus-visible{outline:2px solid #87e7b5;outline-offset:2px}
+.app-layout .work-primary,.app-layout .funding-main,.app-layout .reservation-primary{background:#88e9b4;border:1px solid #a1f4c8;color:#0d2b1c;border-radius:11px;font-weight:800}
+.app-layout .work-primary:hover:not(:disabled),.app-layout .funding-main:hover:not(:disabled),.app-layout .reservation-primary:hover:not(:disabled){background:#b3f7d0}
+.app-layout .work-need,.app-layout .funding-box,.app-layout .funding-group,.app-layout .funding-proposal,.app-layout .catalog-product,.app-layout .catalog-draft,.app-layout .catalog-history-list article,.app-layout .ledger-details,.app-layout .reservation-board,.app-layout .reservation-group-picker button,.app-layout .ledger-group-picker button,.app-layout .ledger-metrics article{border:1px solid rgba(207,248,215,.16);border-radius:13px;background:rgba(10,31,19,.62);color:#f0fff0}
+.app-layout .work-need.is-archived{background:rgba(50,59,52,.55)}
+.app-layout .work-need-text,.app-layout .work-intent-card strong,.app-layout .funding-box h3,.app-layout .funding-proposal strong,.app-layout .catalog-product-body>strong,.app-layout .catalog-heading strong,.app-layout .catalog-history-list strong,.app-layout .funding-group-title>strong,.app-layout .funding-group-list h3,.app-layout .reservation-board-heading h3,.app-layout .reservation-form h4,.app-layout .ledger-detail-heading h3,.app-layout .ledger-metrics strong,.app-layout .ledger-grid-header>div,.app-layout .ledger-group-picker button span,.app-layout .reservation-group-picker button span{color:#effbf0}
+.app-layout .work-need-head,.app-layout .work-need-details,.app-layout .work-need-actions,.app-layout .work-empty p{color:#a3b8a7}
+.app-layout .work-status,.app-layout .funding-state{background:#27573b;color:#a7f6c7;border:1px solid #3c7552}
+.app-layout .work-status.archived{background:#324038;color:#bbc9bb}
+.app-layout .work-consent,.app-layout .work-intent-card,.app-layout .work-match-result,.app-layout .work-discovery-toggle,.app-layout .funding-helper,.app-layout .funding-invite,.app-layout .ledger-terms,.app-layout .reservation-terms{background:rgba(55,108,65,.22);border:1px solid #385f45;border-radius:12px;color:#c3e4cb}
+.app-layout .work-consent small,.app-layout .work-intent-card p,.app-layout .work-intent-card small,.app-layout .work-intent-label,.app-layout .work-discovery-toggle span,.app-layout .work-match-result span,.app-layout .work-match-result p,.app-layout .work-match-result small,.app-layout .funding-helper,.app-layout .ledger-terms,.app-layout .reservation-terms p{color:#abd6b8}
+.app-layout .work-unprocessed{color:#9ab6a2;border:1px dashed #4a6a4e}
+.app-layout .work-match-result strong,.app-layout .work-need-actions button,.app-layout .work-edit-form button{color:#9af1bd}
+.app-layout .work-action-buttons button,.app-layout .catalog-discover-button,.app-layout .catalog-history-top button,.app-layout .funding-heading>button,.app-layout .funding-secondary,.app-layout .reservation-outline,.app-layout .ledger-button,.app-layout .ledger-grid-header button{border:1px solid #497555;color:#b5f3ca;background:#244934;border-radius:10px}
+.app-layout .work-action-buttons button:hover:not(:disabled),.app-layout .catalog-discover-button:hover:not(:disabled),.app-layout .catalog-history-top button:hover:not(:disabled),.app-layout .funding-secondary:hover:not(:disabled),.app-layout .reservation-outline:hover:not(:disabled),.app-layout .ledger-button:hover:not(:disabled){background:#306345}
+.app-layout .catalog-panel{border-top:1px solid var(--stroke)}
+.app-layout .catalog-heading p,.app-layout .catalog-tip,.app-layout .catalog-context,.app-layout .catalog-none,.app-layout .catalog-product-body>span,.app-layout .catalog-product-body>small,.app-layout .catalog-offer-label,.app-layout .catalog-history-list span,.app-layout .catalog-history-list small,.app-layout .catalog-draft>p,.app-layout .catalog-draft>small{color:#a9bdab}
+.app-layout .catalog-product img{background:#dae6da}
+.app-layout .catalog-cta button,.app-layout .funding-invite button{background:#87e9b5;color:#10291c;border-radius:9px}
+.app-layout .catalog-cta a{color:#a6f4c3}
+.app-layout .catalog-warning,.app-layout .funding-warning,.app-layout .reservation-locked,.app-layout .ledger-state-warning,.app-layout .ledger-state-pending{background:rgba(123,85,31,.25);border:1px solid rgba(211,153,77,.42);color:#ebd39f!important}
+.app-layout .catalog-disclaimer{background:rgba(97,80,45,.24);border:1px solid #736145;color:#e0cda3}
+.app-layout .catalog-draft h4,.app-layout .catalog-draft-metrics strong{color:#e7f9e5}
+.app-layout .catalog-draft-metrics div,.app-layout .funding-ledger>div,.app-layout .funding-ledger>div.paid{border:1px solid #3a6147;background:#1a3525;border-radius:10px}
+.app-layout .catalog-draft-metrics span,.app-layout .funding-proposal span,.app-layout .funding-proposal small,.app-layout .funding-group>p,.app-layout .funding-ledger span,.app-layout .funding-ledger small,.app-layout .funding-group-title>strong small{color:#9ab6a1}
+.app-layout .funding-ledger strong{color:#e8f9eb}
+.app-layout .funding-success{color:#9ff0b5!important}
+.app-layout .funding-box>p,.app-layout .funding-box>small{color:#a0b6a4}
+.app-layout .funding-invite strong,.app-layout .funding-invite code,.app-layout .funding-invite small{color:#b2e8ba}
+.app-layout .reservation-empty,.app-layout .ledger-empty,.app-layout .reservation-timeline-loading,.app-layout .ledger-grid-loading{background:rgba(42,65,45,.33);border:1px dashed #46624a;border-radius:12px;color:#afccad}
+.app-layout .reservation-empty strong,.app-layout .ledger-empty strong{color:#e9fbec}
+.app-layout .reservation-empty p,.app-layout .ledger-empty p,.app-layout .reservation-group-picker button small,.app-layout .reservation-board-heading p,.app-layout .reservation-form p,.app-layout .reservation-notice,.app-layout .reservation-no-events,.app-layout .ledger-history-note,.app-layout .ledger-metrics span,.app-layout .ledger-metrics small,.app-layout .ledger-detail-heading p,.app-layout .ledger-group-picker button small,.app-layout .ledger-grid-header span{color:#9ab1a1}
+.app-layout .reservation-group-picker button.is-selected,.app-layout .reservation-group-picker button:hover:not(:disabled),.app-layout .ledger-group-picker button.selected,.app-layout .ledger-group-picker button:hover:not(:disabled){border-color:#7feaaf;background:#27533a}
+.app-layout .reservation-form,.app-layout .reservation-notice,.app-layout .ledger-history-note,.app-layout .work-need-actions{border-color:var(--stroke)}
+.app-layout .reservation-calendar-caption,.app-layout .ledger-grid-header button,.app-layout .ledger-grid-header>div svg{color:#a2ecc0}
+.app-layout .reservation-bryntum-host,.app-layout .ledger-ag-grid{border:1px solid #396247;border-radius:12px}
+.app-layout .reservation-no-events{background:#20372a}
+.app-layout .ledger-metrics strong{color:#9fecba}
+.app-layout .ledger-progress-rail{background:#2a4932}.app-layout .ledger-progress-rail>div{background:linear-gradient(90deg,#4fcb91,#91f2b3)}
+.app-layout .ledger-state-success{background:#1f4e32;color:#a9e9bd;border-color:#4b8d5c}
+.app-layout .ledger-grid-header{color:#ecf9eb}
+.app-layout .ledger-paid-cell{color:#90e6b6!important}.app-layout .ledger-review-cell{color:#f0b597!important}
+.app-layout .work-next{background:rgba(33,67,44,.63);border:1px solid var(--stroke);border-radius:17px}
+.app-layout .work-next p{color:#adc2ae}.app-layout .work-next-icon{background:#315c40;color:#a5f5c5}
+.app-layout .work-error{background:#4a241f;color:#ffb4aa;border:1px solid #8c493b;border-radius:11px}
+.app-layout .work-notice{background:#203d2c;color:#b6ebc4;border:1px solid #3d7651;border-radius:11px}
+.app-layout .work-demo-banner{background:linear-gradient(115deg,rgba(46,112,64,.47),rgba(17,52,27,.42));border:1px solid #4b8057;border-radius:16px}
+.app-layout .work-demo-banner strong{color:#f0ffef}.app-layout .work-demo-banner p{color:#aed7b6}.app-layout .work-demo-banner button{background:#83e9b2;color:#10321f}
+.work-ai-instruction{display:flex;gap:14px;align-items:flex-start;background:rgba(30,85,48,.31);border:1px solid #436c4d;border-radius:15px;padding:19px;margin-bottom:24px}
+.work-ai-instruction>span{width:39px;height:39px;display:grid;place-items:center;flex-shrink:0;border-radius:11px;background:#286041;color:#b2fbd0}
+.work-ai-instruction strong{font-size:13px;color:#e4f8e7}.work-ai-instruction p{font-size:11px;line-height:1.8;color:#b3cfb9;margin-top:5px}
+.work-ai-instruction code{background:#2c5539;padding:2px 5px;border-radius:4px;color:#c8ffe0}
+.work-auth-layout{background:radial-gradient(ellipse at 70% 30%,#2b4c37,transparent 60%),#09150d;color:#e9f9eb}
+.work-auth-story{background:radial-gradient(ellipse at 45% 40%,rgba(111,187,123,.2),transparent 65%),linear-gradient(130deg,#203928,#0a1710 70%);border-right:1px solid #406246}
+.work-auth-story .wordmark{color:#edfcef}.work-auth-story .wordmark span,.work-auth-story .work-kicker{color:#91eeb8}
+.work-auth-heading h2{color:#edfff2}.work-auth-heading p,.work-auth-switch,.work-back,.work-auth-disclaimer{color:#a2bba8}
+.work-auth-switch button{color:#9af1c3}.work-auth-disclaimer{border-color:#42634a}
+.work-auth-layout .work-form label{color:#d0ead5}
+.work-auth-layout .work-form input{background:#142d1e;border:1px solid #45664e;color:#f3fff2;border-radius:10px}
+.work-auth-layout .work-form input::placeholder{color:#789681}
+.work-auth-layout .work-primary{background:#89ecb7;color:#0f2a1d;border-color:#a8f5ca;font-weight:770;border-radius:11px}
+.work-auth-layout .work-back:hover{color:#a5f0c0}
+.work-auth-layout .work-error{background:#462725;color:#ffb5a8;border:1px solid #8d554a}
+@media(max-width:760px){.app-layout .app-sidebar{position:relative;top:auto;min-height:auto;background:#12271b;border-bottom:1px solid #37503d;padding:17px 20px}.app-layout .app-sidebar nav{margin-top:10px}.app-layout .work-main{padding:32px 20px 70px}.app-layout .app-topbar{height:64px;padding:0 20px}.work-tour-link{margin:13px 0}.work-ai-instruction{flex-direction:row}.work-auth-story{border-right:0;border-bottom:1px solid #406246}}
+@media(max-width:480px){.app-layout .work-demo-banner{display:flex;flex-direction:column;align-items:stretch}.app-layout .work-demo-banner button{width:100%}.work-tour-topbutton{font-size:10px;padding:8px}.app-layout .work-main{padding:28px 16px 55px}}

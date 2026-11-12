@@ -6,6 +6,7 @@ import { CatalogPanel, ProposalHistory } from "@/components/catalog-panel";
 import { FundingPanel } from "@/components/funding-panel";
 import { ReservationPanel } from "@/components/reservation-panel";
 import { LedgerPanel } from "@/components/ledger-panel";
+import { DemoTour } from "@/components/demo-tour";
 import {
   ArrowLeft,
   ArrowRight,
@@ -96,6 +97,7 @@ export function Workspace() {
   const [needBusy, setNeedBusy] = useState(false);
   const [loadingNeeds, setLoadingNeeds] = useState(false);
   const [demoBusy, setDemoBusy] = useState(false);
+  const [demoView, setDemoView] = useState(process.env.NODE_ENV !== "production");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [needs, setNeeds] = useState<Need[]>([]);
@@ -325,12 +327,23 @@ export function Workspace() {
     );
   }
 
+  if (demoView) {
+    return (
+      <DemoTour
+        displayName={user.display_name}
+        onLive={() => setDemoView(false)}
+        onSignOut={signOut}
+      />
+    );
+  }
+
   const openCount = needs.filter(need => need.status === "open").length;
   return (
     <div className="app-layout">
       <aside className="app-sidebar">
         <Link href="/" className="wordmark">ONE <span>/</span> MANY</Link>
         <div className="workspace-label">YOUR SHARED SPACE</div>
+        <button className="work-tour-link" type="button" onClick={() => setDemoView(true)}><Sparkles size={16} /> Explore dark demo <ArrowRight size={14} /></button>
         <nav aria-label="Workspace navigation">
           <a href="#needs" className="active"><Lightbulb size={18} /> Your needs</a>
           <a href="#next"><Users size={18} /> Shared groups</a>
@@ -342,7 +355,7 @@ export function Workspace() {
         <button className="work-logout" type="button" onClick={signOut}><LogOut size={16} /> Sign out</button>
       </aside>
       <div className="app-main">
-        <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">ONE / MANY · SHARED WORKSPACE</span></header>
+        <header className="app-topbar"><span>Workspace / <strong>Live workspace</strong></span><button type="button" className="work-tour-topbutton" onClick={() => setDemoView(true)}><Sparkles size={15} /> Interactive demo <ArrowRight size={14} /></button></header>
         <main id="main" className="work-main">
           <section className="work-intro">
             <div><p className="eyebrow"><span className="status-dot" /> THE FIRST STEP</p><h1>What&apos;s on your<br /><em>mind today?</em></h1><p>Describe what you need. AI can identify reusable items, then find possible shared ownership opportunities with your consent.</p></div>
@@ -352,7 +365,7 @@ export function Workspace() {
             <section className="work-demo-banner" aria-label="Fictional demo data">
               <div>
                 <strong>Explore with example data</strong>
-                <p>Load four sample needs and anonymous fictional matches to see how shared discovery works. No real neighbors, products or payments.</p>
+                <p>Load four clearly labeled example needs into this account, or explore the five-section fictional interactive dashboard. No real neighbors or payments.</p>
               </div>
               <button type="button" onClick={() => void loadDemoExamples()} disabled={demoBusy || loadingNeeds}>
                 {demoBusy ? <LoaderCircle size={15} className="work-spinner" /> : <Sparkles size={15} />}
@@ -362,6 +375,7 @@ export function Workspace() {
           )}
           {error && <p className="work-error" role="alert">{error}</p>}
           {notice && <p className="work-notice" role="status"><Check size={16} /> {notice}</p>}
+          <div className="work-ai-instruction"><span><Sparkles size={18} /></span><div><strong>Real AI extraction with Gemini</strong><p>Enter a need and click <b>Save this need</b>. Then use <b>Analyze with Gemini</b> on the saved card. Configure <code>GEMINI_API_KEY</code> in <code>apps/api/.env</code> and restart FastAPI first. Only real requests call Gemini.</p></div></div>
           <div className="work-content">
             <section id="needs" className="work-create-card" aria-labelledby="create-title">
               <div className="work-card-title"><span className="work-kicker">01 / TELL US</span><h2 id="create-title">Add a new need</h2></div>

@@ -31,12 +31,12 @@ export type AuditRow = {
 const modules = [AllCommunityModule];
 
 const ledgerTheme = themeQuartz.withParams({
-  accentColor: "#5d9d45",
-  backgroundColor: "#ffffff",
-  foregroundColor: "#273e2c",
-  headerBackgroundColor: "#edf5e8",
-  borderColor: "#e0e9db",
-  rowHoverColor: "#f1f7eb",
+  accentColor: "#87e8b5",
+  backgroundColor: "#11251b",
+  foregroundColor: "#e4f6e9",
+  headerBackgroundColor: "#203a2b",
+  borderColor: "#355340",
+  rowHoverColor: "#294a36",
   fontFamily: "inherit",
   fontSize: 12,
 });
