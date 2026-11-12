@@ -1,5 +1,6 @@
 """Deterministic price allocation; no floats and no unapproved financial charges."""
 
+
 def equal_shares(price_minor: int, participants: int) -> list[int]:
     if not isinstance(price_minor, int) or isinstance(price_minor, bool) or price_minor <= 0:
         raise ValueError("Price must be a positive integer in minor units")

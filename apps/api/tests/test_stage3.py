@@ -1,4 +1,5 @@
 """Stage 3 provider contracts and financial math use isolated test fixtures only."""
+
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -120,12 +121,18 @@ def prepare_group(client, monkeypatch):
     monkeypatch.setattr("one_many_api.discovery_routes.extract_intent", gemini_fixture)
     a, b = member(client, "stage3-a@example.com"), member(client, "stage3-b@example.com")
     own = prepare_need(
-        client, a, "Need a cordless drill to install shelves",
-        "2026-11-14", "2026-11-15",
+        client,
+        a,
+        "Need a cordless drill to install shelves",
+        "2026-11-14",
+        "2026-11-15",
     )
     peer = prepare_need(
-        client, b, "Need a cordless drill to attach curtain rods",
-        "2026-11-20", "2026-11-21",
+        client,
+        b,
+        "Need a cordless drill to attach curtain rods",
+        "2026-11-20",
+        "2026-11-21",
     )
     for authorization, identifier in [(a, own), (b, peer)]:
         analyzed = client.post(f"/api/v1/needs/{identifier}/analyze", headers=authorization)
@@ -201,9 +208,7 @@ def test_missing_or_failed_api_key_never_returns_fake_items(monkeypatch):
 
     monkeypatch.setattr("one_many_api.channel3.httpx.request", blocked)
     with pytest.raises(CatalogUnavailable, match="rejected"):
-        Channel3Client(Settings(_env_file=None, channel3_api_key="wrong")).search(
-            "drill", [], []
-        )
+        Channel3Client(Settings(_env_file=None, channel3_api_key="wrong")).search("drill", [], [])
 
 
 def test_real_workflow_contract_with_fake_provider_only_in_test(client, monkeypatch):
@@ -212,9 +217,7 @@ def test_real_workflow_contract_with_fake_provider_only_in_test(client, monkeypa
 
     with patch(
         "one_many_api.catalog_routes.Channel3Client.search",
-        return_value=Channel3Client(
-            Settings(_env_file=None, channel3_api_key="test-only")
-        ),
+        return_value=Channel3Client(Settings(_env_file=None, channel3_api_key="test-only")),
     ):
         pass  # provider calls below are mocked at HTTP boundary instead
 

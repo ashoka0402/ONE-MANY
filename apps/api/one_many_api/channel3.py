@@ -2,6 +2,7 @@
 
 See https://docs.trychannel3.com/api-reference. No scraping and no demo fallback.
 """
+
 from __future__ import annotations
 
 import logging
@@ -20,7 +21,15 @@ logger = logging.getLogger("one_many_api")
 
 # Explicitly supported currencies for price display and allocation. No FX conversion.
 CURRENCY_DECIMALS = {"USD": 2, "INR": 2, "EUR": 2, "GBP": 2, "CAD": 2, "AUD": 2, "JPY": 0}
-CURRENCY_SYMBOLS = {"USD": "$", "INR": "₹", "EUR": "€", "GBP": "£", "CAD": "CA$", "AUD": "A$", "JPY": "¥"}
+CURRENCY_SYMBOLS = {
+    "USD": "$",
+    "INR": "₹",
+    "EUR": "€",
+    "GBP": "£",
+    "CAD": "CA$",
+    "AUD": "A$",
+    "JPY": "¥",
+}
 CHANNEL3_URL = "https://api.trychannel3.com"
 
 
@@ -123,10 +132,14 @@ def normalize_product(
     if not isinstance(title, str) or not title.strip() or len(title) > 500:
         raise CatalogMalformed("Missing product title")
     brands = raw.get("brands")
-    brand = next((
-        b.get("name") for b in (brands if isinstance(brands, list) else [])
-        if isinstance(b, dict) and isinstance(b.get("name"), str)
-    ), None)
+    brand = next(
+        (
+            b.get("name")
+            for b in (brands if isinstance(brands, list) else [])
+            if isinstance(b, dict) and isinstance(b.get("name"), str)
+        ),
+        None,
+    )
     description = raw.get("description")
     description = description[:3000] if isinstance(description, str) else None
     images = raw.get("images")
@@ -175,20 +188,20 @@ def normalize_product(
             )
         )
     offers.sort(key=lambda offer: (offer.price_minor, offer.domain, offer.url))
-    evidence = " ".join([
-        title,
-        description or "",
-        *features,
-        *(f"{key} {value}" for key, values in attributes.items() for value in values),
-    ])
+    evidence = " ".join(
+        [
+            title,
+            description or "",
+            *features,
+            *(f"{key} {value}" for key, values in attributes.items() for value in values),
+        ]
+    )
     # Deliberately exact normalized phrase checks. No claim that text proves performance.
     evidence_key = f" {feature_key(evidence)} "
     missing = [f for f in required_features if f" {feature_key(f)} " not in evidence_key]
     excluded = [f for f in excluded_features if f" {feature_key(f)} " in evidence_key]
     suitability = (
-        "blocked" if excluded else
-        "manual_review" if missing or not offers else
-        "candidate"
+        "blocked" if excluded else "manual_review" if missing or not offers else "candidate"
     )
     return CatalogProduct(
         id=product_id,
@@ -286,9 +299,7 @@ class Channel3Client:
             "GET",
             f"/v1/products/{safe_id}",
         )
-        product = normalize_product(
-            result, self.settings.channel3_currency, required, excluded
-        )
+        product = normalize_product(result, self.settings.channel3_currency, required, excluded)
         if product.id != product_id:
             raise CatalogMalformed("Channel3 returned a different product")
         return product

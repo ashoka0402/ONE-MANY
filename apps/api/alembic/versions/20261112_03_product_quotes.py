@@ -3,7 +3,9 @@
 Revision ID: 20261112_03
 Revises: 20261112_02
 """
+
 import sqlalchemy as sa
+
 from alembic import op
 
 revision = "20261112_03"
@@ -45,9 +47,7 @@ def upgrade() -> None:
         sa.Column("quote_expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.CheckConstraint("price_minor > 0", name="ck_proposals_positive_price"),
         sa.CheckConstraint("prospective_members >= 2", name="ck_proposals_min_members"),
-        sa.CheckConstraint(
-            "status IN ('draft', 'cancelled')", name="ck_proposals_status"
-        ),
+        sa.CheckConstraint("status IN ('draft', 'cancelled')", name="ck_proposals_status"),
     )
     op.create_index("ix_proposals_owner_created", "purchase_proposals", ["owner_id", "created_at"])
 
