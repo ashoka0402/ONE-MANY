@@ -33,7 +33,7 @@ jobs:
           python-version: "3.13"
       - name: Install API
         run: python -m pip install -e "./apps/api[dev]"
-      - name: Start PostgreSQL and apply Stage 4 migrations
+      - name: Start PostgreSQL and apply Stage 5 migrations
         env:
           POSTGRES_PASSWORD: validation-only-not-real
           DATABASE_URL: postgresql+psycopg://one_many:validation-only-not-real@127.0.0.1:5432/one_many
@@ -47,11 +47,15 @@ jobs:
           with psycopg.connect("postgresql://one_many:validation-only-not-real@127.0.0.1:5432/one_many") as connection:
               assert connection.execute("SELECT to_regclass('public.users')").fetchone()[0] == "users"
               assert connection.execute("SELECT to_regclass('public.needs')").fetchone()[0] == "needs"
-              assert connection.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "20261112_04"
+              assert connection.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "20261112_05"
               assert connection.execute("SELECT to_regclass('public.need_intents')").fetchone()[0] == "need_intents"
               assert connection.execute("SELECT to_regclass('public.purchase_proposals')").fetchone()[0] == "purchase_proposals"
               for table in ("funding_groups", "funding_members", "payment_attempts", "paypal_webhook_events"):
                   assert connection.execute("SELECT to_regclass(%s)", (f"public.{table}",)).fetchone()[0] == table
+              assert connection.execute("SELECT to_regclass('public.asset_reservations')").fetchone()[0] == "asset_reservations"
+              assert connection.execute(
+                  "SELECT 1 FROM pg_constraint WHERE conname = 'ex_reservations_no_overlap'"
+              ).fetchone()[0] == 1
           PY
           python - <<'PY'
           from fastapi.testclient import TestClient
@@ -175,6 +179,79 @@ jobs:
               assert ledger.status_code == 200, ledger.text
               assert ledger.json()["captured_minor"] == 0
               assert ledger.json()["members"][0]["payment_state"] == "awaiting_approval"
+              # Stage 5 fixture: mimic confirmed sandbox captures inside CI only.
+              from uuid import UUID
+              from sqlalchemy import create_engine, select
+              from sqlalchemy.orm import Session
+              from one_many_api.models import FundingGroup, FundingMember, PaymentAttempt
+              from one_many_api.models import User as DBUser, AssetReservation
+              engine = create_engine("postgresql+psycopg://one_many:validation-only-not-real@127.0.0.1:5432/one_many")
+              with Session(engine) as db:
+                  group = db.get(FundingGroup, UUID(gid))
+                  members = db.scalars(
+                      select(FundingMember).where(FundingMember.group_id == group.id)
+                      .order_by(FundingMember.slot_index)
+                  ).all()
+                  assert len(members) == 2
+                  for m in members:
+                      attempt = db.scalar(select(PaymentAttempt).where(
+                          PaymentAttempt.group_id == gid, PaymentAttempt.user_id == m.user_id
+                      ))
+                      if attempt is None:
+                          attempt = PaymentAttempt(
+                              group_id=group.id, user_id=m.user_id,
+                              amount_minor=m.share_minor, currency=group.currency,
+                              paypal_order_id="CIFIXTUREORDER" + str(m.slot_index) + "123456",
+                          )
+                          db.add(attempt)
+                      attempt.state = "completed"
+                      attempt.paypal_capture_id = "CIFIXTURECAPTURE" + str(m.slot_index) + "12345"
+                  group.state = "funded"
+                  db.commit()
+              reserve_path = "/api/v1/funding/groups/" + gid + "/reservation"
+              reserved = client.put(reserve_path, headers=auth, json={
+                  "start_date": "2026-11-17",
+                  "end_date": "2026-11-18",
+                  "expected_version": 0,
+              })
+              assert reserved.status_code == 200, reserved.text
+              other = client.put(reserve_path, headers=peer_auth, json={
+                  "start_date": "2026-11-20",
+                  "end_date": "2026-11-21",
+                  "expected_version": 0,
+              })
+              assert other.status_code == 200, other.text
+              assert len(other.json()["reservations"]) == 2
+              assert other.json()["reservations"][0]["is_you"] is False
+              assert other.json()["reservations"][1]["is_you"] is True
+              assert client.get(reserve_path + "s", headers=auth).json()["bookable"] is True
+              # Database-level concurrency backstop: a forged third user cannot
+              # insert an active booking overlapping the first reservation.
+              from uuid import uuid4
+              rogue = client.post("/api/v1/auth/register", json={
+                  "email": "pg-overlap-rogue@example.com", "display_name": "Rogue CI",
+                  "password": "not-a-real-secret-password-123",
+              })
+              assert rogue.status_code == 201, rogue.text
+              with Session(engine) as db:
+                  rogue_user = db.scalar(select(DBUser).where(
+                      DBUser.email == "pg-overlap-rogue@example.com"
+                  ))
+                  db.add(AssetReservation(
+                      group_id=UUID(gid), user_id=rogue_user.id,
+                      need_id=UUID(saved.json()["id"]), status="active",
+                      start_date=__import__("datetime").date(2026, 11, 18),
+                      end_date=__import__("datetime").date(2026, 11, 19),
+                  ))
+                  try:
+                      db.commit()
+                  except Exception as ex:
+                      assert getattr(getattr(ex, "orig", None), "sqlstate", "") == "23P01", str(ex)
+                      db.rollback()
+                  else:
+                      raise AssertionError("PostgreSQL must reject overlapping reservations")
+              engine.dispose()
+
 
           PY
       - name: API tests and lint

@@ -243,3 +243,46 @@ class PayPalWebhookEvent(Base):
     received_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+
+class AssetReservation(Base):
+    """One date-only provisional reservation per explicitly accepted group member.
+
+    The actual asset may not yet exist: PayPal Sandbox is not fulfillment.
+    PostgreSQL's additional GiST exclusion constraint protects overlapping
+    active date ranges across concurrent transactions.
+    """
+
+    __tablename__ = "asset_reservations"
+    __table_args__ = (
+        CheckConstraint("status IN ('active', 'cancelled')", name="ck_reservations_status"),
+        CheckConstraint("end_date >= start_date", name="ck_reservations_dates"),
+        Index("ix_reservations_group_member", "group_id", "user_id", unique=True),
+        Index("ix_reservations_group_dates", "group_id", "status", "start_date"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    group_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("funding_groups.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    need_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("needs.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    start_date: Mapped[date] = mapped_column(Date, nullable=False)
+    end_date: Mapped[date] = mapped_column(Date, nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="active", server_default="active"
+    )
+    version: Mapped[int] = mapped_column(nullable=False, default=1, server_default="1")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
