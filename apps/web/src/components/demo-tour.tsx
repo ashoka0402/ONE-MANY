@@ -1,177 +1,261 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import dynamic from "next/dynamic";
+import { useMemo, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import {
-  Activity, ArrowDownLeft, ArrowRight, ArrowUpRight, Bell, CalendarDays,
-  CheckCircle2, ChevronLeft, ChevronRight, CreditCard, Download, Handshake,
-  LayoutDashboard, Lightbulb, LogOut, Menu, ReceiptText, Search,
-  ShieldCheck, Sparkles, Users, Wallet, X,
+  ArrowLeftRight, ArrowRight, ArrowUpRight, CalendarDays, Check,
+  CheckCircle2, ChevronRight, CircleHelp, CreditCard, FileText,
+  Handshake, Lightbulb, LogOut, Play, ReceiptText, ShieldCheck,
+  Sparkles, Users,
 } from "lucide-react";
+import type { AuditRow, MemberRow } from "@/components/ag-ledger-grid";
 
-type Screen = "overview" | "needs" | "groups" | "contributions" | "ledger" | "scheduling";
-type Need = { title: string; kind: string; area: string; price: number; members: number; days: string; status: string; color: string; description: string };
-type Group = { title: string; kind: string; price: number; joined: number; target: number; progress: number; status: string };
-type Entry = { id: string; date: string; title: string; type: string; amount: number; status: string };
+const DemoLedgerGrid = dynamic(
+  () => import("@/components/ag-ledger-grid").then(m => m.AgLedgerGrid),
+  { ssr: false, loading: () => <p className="pd-loading">Preparing the sample contribution ledger…</p> },
+);
+const DemoTimeline = dynamic(() => import("@/components/bryntum-schedule"), {
+  ssr: false, loading: () => <p className="pd-loading">Preparing the sample Bryntum timeline…</p> },
+);
 
-const NEEDS: Need[] = [
-  { title: "Weekend pressure washer", kind: "Pressure washer", area: "Baner, Pune", price: 340, members: 3, days: "Nov 15–16", status: "Match ready", color: "mint", description: "A powerful washer to clean the driveway and patio." },
-  { title: "Outdoor movie night", kind: "Portable projector", area: "Baner, Pune", price: 270, members: 3, days: "Nov 20–21", status: "Match ready", color: "blue", description: "A portable projector for movies with friends." },
-  { title: "Apartment shelf project", kind: "Power drill", area: "Hinjawadi, Pune", price: 120, members: 2, days: "Nov 23–24", status: "Exploring", color: "gold", description: "A cordless drill for putting up shelves at home." },
-  { title: "Neighborhood workshop", kind: "Camera", area: "Aundh, Pune", price: 480, members: 4, days: "Nov 27–28", status: "Draft", color: "purple", description: "A compact camera to record weekend lessons." },
+type Stage = "needs" | "quotes" | "funding" | "ledger" | "schedule";
+type GroupId = "washer" | "projector";
+type Phase = "awaiting_approval" | "approved" | "completed";
+type Scenario = {
+  id: GroupId; product: string; description: string; area: string;
+  price: number; people: number; window: string; ref: string;
+};
+const scenarios: Scenario[] = [
+  { id: "washer", product: "Pressure washer", description: "Clean the patio and shared outdoor space", area: "Baner, Pune", price: 400, people: 4, window: "Nov 16–22", ref: "DEMO-Q-001" },
+  { id: "projector", product: "Portable projector", description: "A neighborhood movie night", area: "Aundh, Pune", price: 360, people: 3, window: "Nov 25–30", ref: "DEMO-Q-002" },
 ];
-const GROUPS: Group[] = [
-  { title: "The clean-up crew", kind: "Pressure washer", price: 340, joined: 3, target: 3, progress: 67, status: "Funding preview" },
-  { title: "Backyard cinema club", kind: "Portable projector", price: 270, joined: 2, target: 3, progress: 35, status: "Recruiting" },
-  { title: "Build together", kind: "Power drill", price: 120, joined: 2, target: 2, progress: 100, status: "Scenario complete" },
+const needs = [
+  { title: "Clean my patio before the weekend", asset: "Pressure washer", description: "I need something to wash the patio and garden tiles.", area: "Baner, Pune", dates: "Nov 16–17", matches: 3, group: "washer" as GroupId, feature: "Outdoor cleaning" },
+  { title: "Project a movie in the courtyard", asset: "Portable projector", description: "A projector for our neighborhood film night.", area: "Aundh, Pune", dates: "Nov 27–28", matches: 2, group: "projector" as GroupId, feature: "Outdoor viewing" },
+  { title: "Put up shelves in my apartment", asset: "Cordless drill", description: "I need a drill for a few shelves in the study.", area: "Hinjawadi, Pune", dates: "Dec 02–03", matches: 1, group: null, feature: "Household repair" },
 ];
-const ENTRIES: Entry[] = [
-  { id: "DEMO-1048", date: "Nov 12, 2026", title: "Washer · your share", type: "Contribution", amount: -113.34, status: "Sample captured" },
-  { id: "DEMO-1047", date: "Nov 11, 2026", title: "Projector · planned share", type: "Planned", amount: -90, status: "Pending example" },
-  { id: "DEMO-1046", date: "Nov 10, 2026", title: "Washer · member 2", type: "Contribution", amount: 113.33, status: "Sample captured" },
-  { id: "DEMO-1045", date: "Nov 9, 2026", title: "Washer · member 3", type: "Contribution", amount: 113.33, status: "Sample captured" },
-  { id: "DEMO-1044", date: "Nov 8, 2026", title: "Camera · draft estimate", type: "Planned", amount: -120, status: "Not charged" },
+const steps: { id: Stage; name: string; kicker: string; description: string; icon: typeof Lightbulb }[] = [
+  { id: "needs", name: "Your needs", kicker: "01 / NEED DISCOVERY", description: "Describe the problem and find compatible people.", icon: Lightbulb },
+  { id: "quotes", name: "Draft quotes", kicker: "02 / COST SHARING", description: "Review an example item price and the individual shares.", icon: FileText },
+  { id: "funding", name: "Group funding", kicker: "03 / PAYPAL SANDBOX", description: "See explicit acceptance and individual approval states.", icon: Handshake },
+  { id: "ledger", name: "Contribution ledger", kicker: "04 / AG GRID", description: "Inspect participant and event records in a real data grid.", icon: ReceiptText },
+  { id: "schedule", name: "Scheduling", kicker: "05 / BRYNTUM", description: "See when members plan to use the shared item.", icon: CalendarDays },
 ];
-const TRENDS = [
-  { label: "Shared needs", points: [27, 33, 31, 39, 43, 46, 42, 54, 58, 60, 65, 72, 79, 86] },
-  { label: "Matches", points: [13, 19, 22, 29, 27, 35, 45, 39, 50, 52, 61, 68, 70, 76] },
-  { label: "Est. savings", points: [15, 24, 28, 32, 30, 38, 42, 53, 49, 60, 67, 72, 78, 91] },
-];
-const NAV = [
-  { key: "overview" as Screen, name: "Overview", icon: LayoutDashboard, badge: "" },
-  { key: "needs" as Screen, name: "Your needs", icon: Lightbulb, badge: "4" },
-  { key: "groups" as Screen, name: "Shared groups", icon: Users, badge: "3" },
-  { key: "contributions" as Screen, name: "Contributions", icon: Wallet, badge: "2" },
-  { key: "ledger" as Screen, name: "Contribution ledger", icon: ReceiptText, badge: "" },
-  { key: "scheduling" as Screen, name: "Scheduling", icon: CalendarDays, badge: "3" },
-];
-const usd = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+const money = (value: number) => "$" + value.toFixed(2);
 
-function DemoBadge({ children = "FICTIONAL DEMO" }: { children?: ReactNode }) {
-  return <span className="v-demo-badge"><span />{children}</span>;
+function groupRows(id: GroupId, phase: Phase): { members: MemberRow[]; events: AuditRow[] } {
+  const washer = id === "washer";
+  const amounts = washer ? [100, 100, 100, 100] : [120, 120, 120];
+  const states = washer
+    ? ["completed", "completed", "completed", "completed"]
+    : ["completed", "reversed", phase];
+  const captured = washer
+    ? [100, 100, 100, 100]
+    : [120, 0, phase === "completed" ? 120 : 0];
+  const updated = ["2026-11-12T08:40:00Z", "2026-11-12T08:47:00Z", "2026-11-12T09:04:00Z", "2026-11-12T09:11:00Z"];
+  const members: MemberRow[] = amounts.map((amount, i) => ({
+    slot: i + 1, is_you: washer ? i === 0 : i === 2,
+    share_minor: amount * 100, share_display: money(amount),
+    captured_minor: captured[i] * 100, captured_display: money(captured[i]),
+    payment_state: states[i], last_updated_at: updated[i],
+  }));
+  const events: AuditRow[] = amounts.map((amount, i) => ({
+    id: "fictional-" + id + "-" + i, recorded_at: updated[i],
+    event_type: states[i] === "completed" ? "capture_completed" : states[i] === "reversed" ? "capture_reversed" : states[i],
+    source: "demo_fictional", member_slot: i + 1,
+    amount_minor: captured[i] * 100, amount_display: money(captured[i]),
+  }));
+  if (!washer && phase === "completed") events.push({
+    id: "fictional-projector-new", recorded_at: "2026-11-12T09:14:00Z",
+    event_type: "simulated_capture", source: "demo_fictional", member_slot: 3,
+    amount_minor: 12000, amount_display: "$120.00",
+  });
+  return { members, events };
 }
 
-function SectionHead({ kicker, title, subtitle, action }: { kicker: string; title: string; subtitle: string; action?: ReactNode }) {
-  return <div className="v-section-head"><div><span className="v-kicker">{kicker}</span><h2>{title}</h2><p>{subtitle}</p></div>{action}</div>;
-}
-
-function ImpactChart({ selected }: { selected: number }) {
-  const [hover, setHover] = useState<number | null>(null);
-  const points = TRENDS[selected].points;
-  const coords = points.map((n, i) => ({ x: 20 + i * (660 / (points.length - 1)), y: 178 - n * 1.5 }));
-  const path = coords.map((p, i) => (i ? "L " : "M ") + p.x + " " + p.y).join(" ");
-  const active = coords[hover ?? coords.length - 1];
-  return <div className="v-chart">
-    <svg viewBox="0 0 700 190" preserveAspectRatio="none" role="img" aria-label={"Fictional " + TRENDS[selected].label + " trend"}>
-      <defs><linearGradient id="v-chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#72eab2" stopOpacity=".29" /><stop offset="1" stopColor="#72eab2" stopOpacity="0" /></linearGradient></defs>
-      {[45, 92, 139].map(y => <line key={y} x1="0" x2="700" y1={y} y2={y} stroke="#ffffff" strokeOpacity=".06" strokeDasharray="4 7" />)}
-      <path d={path + " L 680 190 L 20 190 Z"} fill="url(#v-chart-fill)" />
-      <path d={path} stroke="#7aeabb" fill="none" strokeWidth="3" strokeLinejoin="round" />
-      <line x1={active.x} x2={active.x} y1="0" y2="190" stroke="#fff" strokeOpacity=".2" strokeDasharray="4 7" />
-      <circle cx={active.x} cy={active.y} r="6" stroke="#11291e" strokeWidth="3" fill="#9af8d0" />
-      {coords.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="14" fill="transparent" onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} />)}
-    </svg><div className="v-chart-legend"><span><i />{TRENDS[selected].label} · illustration</span><small>Not real historical data</small></div>
-  </div>;
-}
-
-export function DemoTour({ displayName, onLive, onSignOut }: { displayName: string; onLive: () => void; onSignOut: () => void }) {
-  const [screen, setScreen] = useState<Screen>("overview");
-  const [search, setSearch] = useState("");
-  const [trend, setTrend] = useState(0);
-  const [card, setCard] = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const [expanded, setExpanded] = useState<number | null>(0);
-  const [matchOnly, setMatchOnly] = useState(false);
-  const [day, setDay] = useState(2);
-  const [calendarInfo, setCalendarInfo] = useState(false);
-  const [help, setHelp] = useState(false);
-  const [notification, setNotification] = useState(false);
-  const [mobileNav, setMobileNav] = useState(false);
-  const searchInput = useRef<HTMLInputElement>(null);
-  const firstName = displayName.split(" ")[0] || "there";
-  const matchingNeeds = useMemo(() => NEEDS.filter(n => (!matchOnly || n.status === "Match ready") && (n.title + n.kind + n.area).toLowerCase().includes(search.toLowerCase())), [search, matchOnly]);
-  const matchingGroups = useMemo(() => GROUPS.filter(g => (g.title + g.kind).toLowerCase().includes(search.toLowerCase())), [search]);
-  const matchingEntries = useMemo(() => ENTRIES.filter(e => (e.id + e.title + e.status + e.type).toLowerCase().includes(search.toLowerCase())), [search]);
-  const bookings: Record<number, { asset: string; member: string; color: string }> = {
-    1: { asset: "Pressure washer", member: "Member 1", color: "mint" },
-    3: { asset: "Pressure washer", member: "Member 2", color: "blue" },
-    5: { asset: "Portable projector", member: "You", color: "gold" },
-  };
-
-  useEffect(() => {
-    function shortcuts(event: KeyboardEvent) {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault(); searchInput.current?.focus();
-      }
-      if (event.key === "Escape") { setHelp(false); setNotification(false); setMobileNav(false); }
-    }
-    window.addEventListener("keydown", shortcuts);
-    return () => window.removeEventListener("keydown", shortcuts);
-  }, []);
-
-  function navigate(target: Screen) { setScreen(target); setSearch(""); setMobileNav(false); }
-  function cycle(direction: number) { setCard(n => (n + NEEDS.length + direction) % NEEDS.length); setFlipped(false); }
-  function exportCsv() {
-    const rows = [["ID", "Date", "Title", "Type", "Amount USD", "Status", "Provenance"], ...ENTRIES.map(row => [row.id, row.date, row.title, row.type, String(row.amount), row.status, "FICTIONAL DEMO"])];
-    const csv = rows.map(row => row.map(value => '"' + value.replaceAll('"', '""') + '"').join(",")).join("\n");
-    const href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-    const a = document.createElement("a"); a.href = href; a.download = "one-many-demo-ledger.csv";
-    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(href);
-  }
-  const item = NEEDS[card];
-
-  return <div className="v-page"><div className="v-shell">
-    <aside className={"v-sidebar" + (mobileNav ? " open" : "")}>
-      <div className="v-brand"><span className="v-brand-mark"><Handshake size={23} /></span><div><strong>ONE <em>/</em> MANY</strong><small>Make more possible.</small></div><button className="v-close-nav" onClick={() => setMobileNav(false)} aria-label="Close menu"><X size={18} /></button></div>
-      <div className="v-nav-caption">YOUR WORKSPACE</div><nav aria-label="Demo navigation" className="v-nav">{NAV.map(({ key, name, icon: Icon, badge }) =>
-        <button key={key} onClick={() => navigate(key)} className={screen === key ? "active" : ""} aria-current={screen === key ? "page" : undefined}><Icon size={18} /><span>{name}</span>{badge && <i>{badge}</i>}</button>)}</nav>
-      <div className="v-sidebar-rule" /><div className="v-nav-caption">DISCOVER</div><div className="v-nav"><button onClick={onLive}><Activity size={18} /><span>Real workspace</span><ArrowUpRight size={14} /></button><button onClick={() => setHelp(true)}><ShieldCheck size={18} /><span>Demo guide</span></button></div>
-      <div className="v-sidebar-footer"><div className="v-savings-box"><small>Illustrative savings</small><strong>$466.00</strong><p>Across four example needs</p><div className="v-mini-progress"><span /></div></div><div className="v-person"><span>{firstName[0].toUpperCase()}</span><div><strong>{displayName}</strong><small>Demo preview</small></div><button onClick={onSignOut} aria-label="Sign out" title="Sign out"><LogOut size={17} /></button></div></div>
-    </aside>
-    {mobileNav && <button className="v-nav-scrim" onClick={() => setMobileNav(false)} aria-label="Close navigation" />}
-    <div className="v-main">
-      <header className="v-topbar"><button className="v-open-nav" onClick={() => setMobileNav(true)} aria-label="Open navigation"><Menu size={22} /></button><label className="v-search"><Search size={18} /><input ref={searchInput} value={search} onChange={e => setSearch(e.target.value)} placeholder="Search needs, groups, activity..." aria-label="Search demo records" /><kbd>⌘K</kbd></label><div className="v-top-actions"><DemoBadge /><button className="v-round-icon" onClick={() => setNotification(!notification)} aria-label="Notifications"><Bell size={19} /><i /></button><button className="v-user-circle" onClick={() => setHelp(true)} aria-label="About demo">{firstName[0].toUpperCase()}</button></div>{notification && <div className="v-notification"><strong>No real notifications</strong><p>This is a preview with fictional activity.</p><button onClick={() => setNotification(false)}>Close</button></div>}</header>
-      <main className="v-content">
-        {screen === "overview" && <>
-          <div className="v-hero"><div><span className="v-kicker"><span className="v-pulse" /> YOUR WORLD, BETTER SHARED</span><h1>Good to see you, <em>{firstName}.</em></h1><p>Four shared possibilities, a few good neighbors, and a smarter way to own less.</p></div><div className="v-hero-buttons"><button className="v-outline" onClick={() => setHelp(true)}><ShieldCheck size={16} /> About this demo</button><button className="v-primary" onClick={onLive}><Sparkles size={17} /> Try real AI extraction <ArrowRight size={16} /></button></div></div>
-          {search && <div className="v-panel v-search-result"><div className="v-panel-heading"><h3>Results for “{search}”</h3><button onClick={() => setSearch("")}>Clear <X size={14} /></button></div>{matchingNeeds.map(n => <button key={n.title} onClick={() => navigate("needs")}>{n.title}<ArrowRight size={14} /></button>)}{matchingGroups.map(g => <button key={g.title} onClick={() => navigate("groups")}>{g.title}<ArrowRight size={14} /></button>)}{!matchingNeeds.length && !matchingGroups.length && <p>No sample records matched.</p>}</div>}
-          <div className="v-hero-grid">
-            <section className="v-panel v-card-panel"><div className="v-panel-heading"><div><h3>Shared possibilities</h3><p>Tap the card to flip it and explore an example.</p></div><button onClick={() => navigate("needs")}>All needs <ArrowUpRight size={15} /></button></div>
-              <div className="v-card-stage"><div className="v-stacked-card back" /><div className="v-stacked-card middle" /><button className={"v-asset-card " + item.color + (flipped ? " flipped" : "")} onClick={() => setFlipped(!flipped)} aria-label={flipped ? "Show card front" : "Flip card for details"}><div className="v-card-top"><span>ONE / MANY</span><span>◉</span></div>{flipped ? <div className="v-flip-content"><strong>{item.members} potential people</strong><span>Example equal share</span><b>{usd(item.price / item.members)}</b></div> : <><div className="v-card-icon"><Sparkles size={26} /></div><div className="v-card-bottom"><span><small>SHARED ASSET</small><strong>{item.kind}</strong></span><b>{"0" + (card + 1)}</b></div></>}</button></div>
-              <div className="v-card-controls"><div><small>NOW EXPLORING</small><strong>{item.title}</strong><span>{item.area} · {item.days}</span></div><div><button onClick={() => cycle(-1)} aria-label="Previous need"><ChevronLeft size={18} /></button><button onClick={() => cycle(1)} aria-label="Next need"><ChevronRight size={18} /></button></div></div>
-            </section>
-            <section className="v-panel v-impact"><div className="v-panel-heading"><div><h3>Shared impact</h3><p>How this fictional community could grow</p></div><span className="v-green-tag"><ArrowUpRight size={14} /> Preview</span></div><div className="v-impact-numbers"><div><strong>$1,210<span>.00</span></strong><small>Combined illustrative product value</small></div><div><span><small>Needs</small><b>04</b></span><span><small>Matches</small><b>06</b></span><span><small>Groups</small><b>03</b></span></div></div><div className="v-chart-tabs">{TRENDS.map((t, i) => <button className={trend === i ? "active" : ""} onClick={() => setTrend(i)} key={t.label}>{t.label}</button>)}</div><ImpactChart selected={trend} /></section>
-          </div>
-          <div className="v-lower-grid"><section className="v-panel v-activity"><div className="v-panel-heading"><div><h3>Latest activity</h3><p>Sample transactions and milestones</p></div><button onClick={() => navigate("ledger")}>All activity <ArrowUpRight size={15} /></button></div>{ENTRIES.slice(0, 3).map(entry => <div className="v-activity-row" key={entry.id}><span className="v-activity-icon">{entry.amount > 0 ? <ArrowDownLeft size={19} /> : <CreditCard size={19} />}</span><div><strong>{entry.title}</strong><small>{entry.date} · {entry.status}</small></div><b>{usd(Math.abs(entry.amount))}</b></div>)}</section>
-            <section className="v-panel v-upcoming"><div className="v-panel-heading"><div><h3>Coming up</h3><p>Illustrative shared-use calendar</p></div><button onClick={() => navigate("scheduling")}>Schedule <ArrowUpRight size={15} /></button></div>{[["16", "NOV", "Pressure washer", "Member 1 · Baner, Pune"],["21", "NOV", "Outdoor movie night", "You · Baner, Pune"]].map(row => <button className="v-upcoming-row" onClick={() => navigate("scheduling")} key={row[0]}><span><strong>{row[0]}</strong><small>{row[1]}</small></span><div><strong>{row[2]}</strong><small>{row[3]}</small></div><ChevronRight size={17} /></button>)}</section></div>
-        </>}
-        {screen === "needs" && <><SectionHead kicker="01 / YOUR NEEDS" title="The beginning of something shared." subtitle="Browse example needs and classifications. Only the live workspace runs Gemini."
-          action={<button className="v-primary" onClick={onLive}><Sparkles size={17} /> Create & analyze a real need <ArrowRight size={15} /></button>} />
-          <div className="v-ai-guide"><div className="v-ai-icon"><Sparkles size={23} /></div><div><strong>How AI extraction works</strong><p>Save a need in the live workspace, then click <b>Analyze with Gemini</b>. Gemini identifies the reusable asset, purpose and features. After opting into discovery, you can check for matches. The examples below are prewritten, not AI responses.</p></div><button onClick={onLive}>Try it live <ArrowUpRight size={15} /></button></div>
-          <div className="v-list-toolbar"><div><strong>{matchingNeeds.length} sample needs</strong><small>Fictional examples · no real catalog prices</small></div><button className={matchOnly ? "active" : ""} onClick={() => setMatchOnly(!matchOnly)}>{matchOnly ? "✓ " : ""}Match ready only</button></div>
-          <div className="v-needs-grid">{matchingNeeds.map((n, i) => <article className="v-panel v-need" key={n.title}><div className="v-need-top"><span className={"v-kind-icon " + n.color}><Lightbulb size={22} /></span><span className="v-status">{n.status}</span></div><h3>{n.title}</h3><p>{n.description}</p><div className="v-need-meta"><span>{n.area}</span><span>{n.days}</span></div><div className="v-need-ai"><small><Sparkles size={13} /> PREWRITTEN CLASSIFICATION</small><strong>{n.kind}</strong><span>Reusable asset · example only</span></div><div className="v-need-bottom"><div><small>Potential members</small><strong>{n.members}</strong></div><div><small>Example share</small><strong>{usd(n.price / n.members)}</strong></div><button aria-label={"View group for " + n.title} onClick={() => { setExpanded(i); navigate("groups"); }}><ArrowUpRight size={18} /></button></div></article>)}</div>
-          {!matchingNeeds.length && <div className="v-panel v-empty">No sample needs match that search.</div>}
-        </>}
-        {screen === "groups" && <><SectionHead kicker="02 / SHARED GROUPS" title="Better, together." subtitle="Fictional neighborhood groups demonstrate membership and funding stages without creating actual PayPal orders." action={<button className="v-outline" onClick={onLive}>Manage real groups <ArrowUpRight size={16} /></button>} />
-          <div className="v-stat-strip"><div><small>Sample groups</small><strong>03</strong></div><div><small>Fictional member slots</small><strong>07</strong></div><div><small>Illustrative value</small><strong>$730</strong></div></div>
-          <div className="v-groups-grid">{matchingGroups.map(g => { const i = GROUPS.indexOf(g);return <article key={g.title} className="v-panel v-group"><div className="v-group-top"><span className="v-group-icon"><Handshake size={23} /></span><span className="v-status">{g.status}</span></div><small className="v-kicker">{g.kind.toUpperCase()}</small><h3>{g.title}</h3><p>{g.joined} / {g.target} fictional participants</p><strong className="v-group-amount">{usd(g.price)}</strong><span className="v-muted">Hypothetical item price</span><div className="v-progress-label"><span>Scenario progress</span><b>{g.progress}%</b></div><div className="v-progress"><span style={{ width: g.progress + "%" }} /></div><button className="v-group-expand" onClick={() => setExpanded(expanded === i ? null : i)} aria-expanded={expanded === i}>Group details <ChevronRight size={17} /></button>{expanded === i && <div className="v-group-details"><div><span>Example equal share</span><strong>{usd(g.price / g.target)}</strong></div><div><span>Possible members</span><strong>{g.joined} of {g.target}</strong></div><p>Sample only: no real people were invited or charged.</p><button onClick={() => navigate("contributions")}>Preview contributions <ArrowRight size={15} /></button></div>}</article>; })}</div>
-          {!matchingGroups.length && <div className="v-panel v-empty">No matching sample groups.</div>}
-        </>}
-        {screen === "contributions" && <><SectionHead kicker="03 / CONTRIBUTIONS" title="A little from everyone." subtitle="Explore a group payment scenario. Fictional amounts below are not verified Sandbox captures." action={<button className="v-outline" onClick={() => navigate("ledger")}>View sample ledger <ArrowUpRight size={16} /></button>} />
-          <div className="v-contrib-grid"><div className="v-panel v-contrib-hero"><span className="v-kicker">ILLUSTRATIVE GROUP PROGRESS</span><h3>$226.67 <span>/ $340.00</span></h3><p>Example: The clean-up crew</p><div className="v-progress large"><span style={{ width: "66.7%" }} /></div><div className="v-progress-label"><span>0%</span><span>67% scenario complete</span><span>100%</span></div><div className="v-contrib-notice"><ShieldCheck size={19} /><span>In live mode, contributions count only after individual PayPal Sandbox approval and verification.</span></div></div>
-            <div className="v-panel v-members"><h3>Member shares</h3>{[["You", "$113.34", "Sample captured"],["Member 2", "$113.33", "Sample captured"],["Member 3", "$113.33", "Pending example"]].map((m, i) => <div className="v-member" key={m[0]}><span className={"v-member-avatar m" + i}>{m[0][0]}</span><div><strong>{m[0]}</strong><small>{m[2]}</small></div><b>{m[1]}</b></div>)}<small className="v-muted">Every member and status on this page is invented.</small></div></div>
-          <section className="v-panel v-flow"><div className="v-panel-heading"><div><h3>From possibility to participation</h3><p>Live funding flow · every member must explicitly opt in</p></div></div><div className="v-flow-steps">{[["01", "Invite", "Share a group code"],["02", "Accept", "Choose a matching need"],["03", "Approve", "PayPal Sandbox"],["04", "Verify", "Reconcile the capture"]].map(step => <div key={step[0]}><span>{step[0]}</span><strong>{step[1]}</strong><small>{step[2]}</small></div>)}</div><button className="v-primary" onClick={onLive}>Open live funding <ArrowRight size={15} /></button></section>
-        </>}
-        {screen === "ledger" && <><SectionHead kicker="04 / CONTRIBUTION LEDGER" title="Every detail, accounted for." subtitle="Searchable and downloadable fictional ledger entries. No sample row is a real payment or audit event." action={<button className="v-outline" onClick={exportCsv}><Download size={17} /> Export demo CSV</button>} />
-          <div className="v-ledger-stats"><div className="v-panel"><small>Example product value</small><strong>$730.00</strong><span>Illustration only</span></div><div className="v-panel"><small>Example shared amount</small><strong>$226.67</strong><span>Not a PayPal capture</span></div><div className="v-panel"><small>Sample entries</small><strong>05</strong><span>Fictional records</span></div></div><div className="v-panel v-ledger-box"><div className="v-panel-heading"><div><h3>Activity details</h3><p>Use the top search bar to filter the ledger</p></div><DemoBadge>SIMULATED LEDGER</DemoBadge></div><div className="v-table-scroll"><table className="v-table"><thead><tr><th>ENTRY</th><th>DETAILS</th><th>CATEGORY</th><th>AMOUNT</th><th>STATUS</th></tr></thead><tbody>{matchingEntries.map(row => <tr key={row.id}><td><span>{row.id}</span><small>{row.date}</small></td><td><strong>{row.title}</strong></td><td>{row.type}</td><td className={row.amount > 0 ? "v-income" : ""}>{row.amount < 0 ? "−" : "+"}{usd(Math.abs(row.amount))}</td><td><span className="v-status">{row.status}</span></td></tr>)}</tbody></table>{!matchingEntries.length && <div className="v-empty">No sample rows found.</div>}</div><p className="v-ledger-note"><ShieldCheck size={16} /> Live records are read-only and reconciled against verified Sandbox captures.</p></div>
-        </>}
-        {screen === "scheduling" && <><SectionHead kicker="05 / SCHEDULING" title="Your time. Shared on your terms." subtitle="Try the fictional shared-use calendar. Changes here do not alter persisted reservations." action={<button className="v-outline" onClick={onLive}>Open real scheduler <ArrowUpRight size={16} /></button>} />
-          <div className="v-schedule-grid"><section className="v-panel v-calendar"><div className="v-panel-heading"><div><h3>November 16–22, 2026</h3><p>Example shared-use calendar · whole-day reservations</p></div><span className="v-status">3 sample bookings</span></div><div className="v-calendar-days">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => <button key={d} className={day === i ? "active" : ""} onClick={() => { setDay(i); setCalendarInfo(false); }} aria-pressed={day === i}><small>{d}</small><strong>{i + 16}</strong>{bookings[i] && <i />}</button>)}</div><span className="v-kicker">SELECTED DAY · {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"][day]} {day + 16}</span>{bookings[day] ? <button className={"v-booking " + bookings[day].color} onClick={() => setCalendarInfo(!calendarInfo)}><span className="v-booking-dot" /><div><strong>{bookings[day].asset}</strong><small>{bookings[day].member} · Fictional all-day use</small></div><ChevronRight size={18} /></button> : <div className="v-calendar-empty"><CalendarDays size={24} /> Available in this example</div>}{calendarInfo && <p className="v-booking-info">This is an example booking only. The real app checks overlaps and permissions before saving a reservation.</p>}</section><section className="v-panel v-schedule-info"><span className="v-kicker">SHARE SMARTER</span><h3>One asset.<br /><em>Everyone gets a turn.</em></h3><p>Flexible shared-use schedules, without the confusion. Switch to the live scheduler to create a real, conflict-checked booking.</p>{["Member-owned date windows", "PostgreSQL conflict protection", "Verified Sandbox funding required"].map(v => <div className="v-checkline" key={v}><CheckCircle2 size={18} />{v}</div>)}<button className="v-primary" onClick={onLive}>Try real scheduling <ArrowRight size={15} /></button></section></div>
-        </>}
-        <footer className="v-footer"><ShieldCheck size={15} /><span>Fictional interactive preview. Use the <b>real workspace</b> for Gemini extraction, genuine opt-in groups and verified Sandbox activity.</span><button onClick={onLive}>Live workspace <ArrowUpRight size={14} /></button></footer>
-      </main>
+function HandoffDrawing() {
+  const reduced = useReducedMotion();
+  const [run, setRun] = useState(0);
+  const [delivered, setDelivered] = useState(false);
+  return (
+    <div className="pd-handoff" aria-label="Cartoon illustration of one person handing a shared tool to another">
+      <div className="pd-handoff-head">
+        <div><strong>From my turn to yours.</strong><span>A little handover, a lot of shared value.</span></div>
+        <button type="button" onClick={() => { setDelivered(false); setRun(n => n + 1); }}><Play size={14} /> Replay handoff</button>
+      </div>
+      <svg className="pd-handoff-svg" viewBox="0 0 520 198" role="img"
+        aria-label="Two smiling neighbors passing a small pressure washer from left to right">
+        <defs>
+          <linearGradient id="pd-handoff-ground" x1="0" x2="0" y1="0" y2="1"><stop stopColor="#345f42" stopOpacity=".35" /><stop offset="1" stopColor="#345f42" stopOpacity="0" /></linearGradient>
+        </defs>
+        <path d="M28 169 H493" stroke="#5f996e" strokeOpacity=".36" strokeWidth="2" strokeDasharray="6 8" />
+        <ellipse cx="260" cy="171" rx="225" ry="22" fill="url(#pd-handoff-ground)" />
+        <g className="pd-character person-left">
+          <path d="M110 128 L98 163 M127 128 L137 163" stroke="#9fc0ad" strokeWidth="10" strokeLinecap="round" />
+          <rect x="91" y="76" width="51" height="64" rx="22" fill="#73d6a4" />
+          <circle cx="116" cy="54" r="25" fill="#d8bea8" />
+          <path d="M92 50 Q90 22 116 28 Q145 28 140 50" fill="#2c382e" />
+          <circle cx="107" cy="54" r="2.4" fill="#28382e" /><circle cx="123" cy="54" r="2.4" fill="#28382e" />
+          <path d="M108 63 Q116 71 125 63" fill="none" stroke="#8e5147" strokeWidth="2.4" strokeLinecap="round" />
+          <path d="M137 93 L172 111 L195 105" fill="none" stroke="#d8bea8" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M98 91 L81 117" fill="none" stroke="#d8bea8" strokeWidth="10" strokeLinecap="round" />
+        </g>
+        <g className="pd-character person-right">
+          <path d="M386 128 L376 163 M407 128 L414 163" stroke="#a9b1c8" strokeWidth="10" strokeLinecap="round" />
+          <rect x="374" y="76" width="49" height="64" rx="22" fill="#a8b7ee" />
+          <circle cx="398" cy="54" r="25" fill="#dfc4ab" />
+          <path d="M374 49 Q376 25 399 27 Q425 26 424 50" fill="#453c34" />
+          <circle cx="389" cy="54" r="2.4" fill="#28382e" /><circle cx="407" cy="54" r="2.4" fill="#28382e" />
+          <path d="M389 63 Q397 72 406 63" fill="none" stroke="#8e5147" strokeWidth="2.4" strokeLinecap="round" />
+          <path d="M378 93 L340 114 L320 105" fill="none" stroke="#dfc4ab" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M418 94 L439 118" fill="none" stroke="#dfc4ab" strokeWidth="10" strokeLinecap="round" />
+        </g>
+        <motion.g key={run} initial={{ x: 0, y: 0, rotate: 0 }}
+          animate={reduced ? { x: 142 } : { x: [0, 72, 142], y: [0, -24, 0], rotate: [0, -8, 0] }}
+          transition={{ duration: reduced ? 0 : 1.55, ease: "easeInOut", delay: reduced ? 0 : .18 }}
+          onAnimationComplete={() => setDelivered(true)}>
+          <rect x="185" y="92" width="35" height="25" rx="7" fill="#b8f3c5" stroke="#436f50" strokeWidth="2" />
+          <path d="M191 92 V86 Q191 82 195 82 H209 Q214 82 214 86 V92" fill="none" stroke="#b8f3c5" strokeWidth="5" />
+          <circle cx="192" cy="118" r="5" fill="#273d30" /><circle cx="212" cy="118" r="5" fill="#273d30" />
+          <path d="M200 99 H207 M200 104 H207" stroke="#386644" strokeWidth="2" />
+        </motion.g>
+        {!reduced && <motion.path key={"spark" + run} d="M235 78 L240 67 M246 79 L255 73 M251 90 L262 88"
+          stroke="#a6f4bf" strokeWidth="2.5" strokeLinecap="round" fill="none"
+          initial={{ opacity: 0 }} animate={{ opacity: [0, .9, 0] }}
+          transition={{ delay: .9, duration: .65 }} />}
+        <text x="116" y="189" textAnchor="middle" fill="#a6c4ac" fontSize="11">Neighbor A</text>
+        <text x="398" y="189" textAnchor="middle" fill="#a6c4ac" fontSize="11">Neighbor B</text>
+      </svg>
+      <p role="status" className="pd-handoff-note">
+        {delivered ? <><Check size={15} /> Handoff complete! Next person&apos;s turn.</>
+          : <><ArrowLeftRight size={15} /> Shared-use illustration · no real delivery has occurred.</>}
+      </p>
     </div>
-  </div>
-  {help && <div className="v-modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setHelp(false); }}><section className="v-modal" role="dialog" aria-modal="true" aria-labelledby="v-modal-title"><button className="v-modal-close" onClick={() => setHelp(false)} aria-label="Close"><X size={19} /></button><div className="v-ai-icon"><Sparkles size={23} /></div><DemoBadge /><h2 id="v-modal-title">Explore without risk.</h2><p>The five sections contain fictional preview data. No real users, payments, inventory or reservations are created by these interactions.</p><div className="v-modal-guide"><strong>To use actual Gemini extraction:</strong><span>1. Put <code>GEMINI_API_KEY</code> in <code>apps/api/.env</code>.</span><span>2. Restart FastAPI and switch to the real workspace.</span><span>3. Save a need, then click <b>Analyze with Gemini</b>.</span></div><button className="v-primary" onClick={() => { setHelp(false); onLive(); }}>Open real workspace <ArrowRight size={15} /></button></section></div>}
-  </div>;
+  );
+}
+
+export function DemoTour({ displayName, onLive, onSignOut }: {
+  displayName: string; onLive: () => void; onSignOut: () => void;
+}) {
+  const [stage, setStage] = useState<Stage>("needs");
+  const [group, setGroup] = useState<GroupId>("washer");
+  const [phase, setPhase] = useState<Phase>("awaiting_approval");
+  const [selectedDay, setSelectedDay] = useState("2026-11-18");
+  const [showExtract, setShowExtract] = useState<string | null>(null);
+  const [showGuide, setShowGuide] = useState(false);
+  const current = scenarios.find(s => s.id === group)!;
+  const rows = useMemo(() => groupRows(group, phase), [group, phase]);
+  const captured = rows.members.reduce((sum, m) => sum + m.captured_minor, 0) / 100;
+  const progress = Math.round((captured / current.price) * 100);
+  const timeline = [
+    { id: "sample-1", slot: 1, start_date: "2026-11-16", end_date: "2026-11-17", is_you: true },
+    { id: "sample-2", slot: 2, start_date: "2026-11-18", end_date: "2026-11-19", is_you: false },
+    { id: "sample-3", slot: 3, start_date: "2026-11-20", end_date: "2026-11-21", is_you: false },
+    { id: "sample-4", slot: 4, start_date: "2026-11-22", end_date: "2026-11-22", is_you: false },
+  ];
+  const dayIndex = Number(selectedDay.slice(-2)) - 16;
+  const selectedBooking = timeline.find(b => selectedDay >= b.start_date && selectedDay <= b.end_date);
+  const heading = {
+    needs: ["Understand the need.", "The first step is simply saying what you need."],
+    quotes: ["Saved draft quotes", "Review the item, the example price and each proposed share before anyone is invited."],
+    funding: ["Fund a shared possibility.", "Invite interested participants, collect explicit acceptance and approve each share separately."],
+    ledger: ["Every contribution. Accounted for.", "Read-only records of member payment states and events—shown here as fictional AG Grid data."],
+    schedule: ["One asset. Everyone's turn.", "A shared-use timeline shows who plans to use the item, and when."],
+  }[stage];
+
+  function go(next: Stage) { setStage(next); setShowGuide(false); }
+  return (
+    <div className="pd-root">
+      <div className="pd-shell">
+        <aside className="pd-sidebar">
+          <div className="pd-brand"><span><Handshake size={20} /></span><div><strong>ONE <i>/</i> MANY</strong><small>Shared ownership, made clear.</small></div></div>
+          <div className="pd-sidebar-label">PRODUCT FLOW</div>
+          <nav className="pd-navigation" aria-label="Prototype navigation">
+            {steps.map((step, i) => <button key={step.id} type="button" onClick={() => go(step.id)}
+              className={stage === step.id ? "selected" : ""} aria-current={stage === step.id ? "step" : undefined}>
+              <span className="pd-nav-num">{String(i + 1).padStart(2, "0")}</span>
+              <span>{step.name}</span><ChevronRight size={15} />
+            </button>)}
+          </nav>
+          <div className="pd-sidebar-bottom">
+            <div className="pd-side-guide"><ShieldCheck size={19} /><strong>Prototype mode</strong><p>Every example is fictional. Sandbox captures and bookings are simulated here, never submitted to the API.</p></div>
+            <button className="pd-live" onClick={onLive}>Open live workspace <ArrowUpRight size={16} /></button>
+            <div className="pd-profile"><span>{displayName[0]?.toUpperCase() || "U"}</span><div><strong>{displayName}</strong><small>Exploring the prototype</small></div><button onClick={onSignOut} aria-label="Sign out" title="Sign out"><LogOut size={17} /></button></div>
+          </div>
+        </aside>
+        <main className="pd-main" id="main">
+          <div className="pd-topline"><div><span className="pd-dot" /> INTERACTIVE PRODUCT PROTOTYPE</div><div><span className="pd-demo-label">DEMO · NOT REAL PAYMENTS</span><button onClick={onLive}>Live app <ArrowUpRight size={15} /></button></div></div>
+          <div className="pd-heading">
+            <span className="pd-kicker">{steps.find(step => step.id === stage)!.kicker}</span>
+            <h1>{heading[0]}</h1>
+            <p>{heading[1]}</p>
+          </div>
+          <div className="pd-context"><div><span className="pd-dot" /><strong>One consistent story, end to end</strong><small>Baner pressure washer · $400 · 4 prospective members</small></div>
+            <button type="button" onClick={() => setShowGuide(v => !v)}><CircleHelp size={16} /> {showGuide ? "Hide guide" : "How to explore"}</button></div>
+          {showGuide && <div className="pd-help" role="status">Start with the needs, follow a draft quote into funding, inspect simulated transaction states in the real AG Grid component, and see the handover in Bryntum Scheduler. Nothing here creates or modifies a PayPal order, database row, invitation, or actual booking.</div>}
+
+          {stage === "needs" && <div className="pd-section">
+            <div className="pd-section-row"><div><h2>Example requests</h2><p>Three fictional neighbors, with prewritten extraction results. Real AI extraction is in the live workspace.</p></div><button className="pd-quiet-button" onClick={onLive}><Sparkles size={16} /> Analyze a real need <ArrowUpRight size={15} /></button></div>
+            <div className="pd-need-list">{needs.map((need, i) => <article className="pd-record" key={need.title}>
+              <div className="pd-record-index">{String(i + 1).padStart(2, "0")}</div>
+              <div className="pd-record-content"><div className="pd-record-head"><h3>{need.title}</h3><span className="pd-tag">{need.asset}</span></div><p>{need.description}</p><div className="pd-meta">{need.area} <span>·</span> {need.dates} <span>·</span> {need.matches} fictional matches</div>
+                {showExtract === need.title && <div className="pd-extract"><Sparkles size={16} /><div><strong>Sample classification · not a Gemini response</strong><span>Item: {need.asset} · Purpose: {need.feature} · Reusable: Yes</span></div></div>}
+              </div><div className="pd-record-actions">
+                <button type="button" onClick={() => setShowExtract(showExtract === need.title ? null : need.title)}>Sample extraction</button>
+                {need.group && <button className="pd-record-next" type="button" onClick={() => { setGroup(need.group!); go("quotes"); }}>View quote <ArrowRight size={15} /></button>}
+              </div>
+            </article>)}</div>
+            <div className="pd-bottom-action"><button className="pd-primary" onClick={() => go("quotes")}>Next: draft quotes <ArrowRight size={16} /></button></div>
+          </div>}
+
+          {stage === "quotes" && <div className="pd-section">
+            <div className="pd-section-row"><div><h2>Cost-sharing proposals</h2><p>Demo price snapshots, not live Channel3 merchant offers, commitments, or actual purchases.</p></div></div>
+            <div className="pd-quote-list">{scenarios.map(s => <button key={s.id} type="button" className={"pd-quote" + (group === s.id ? " active" : "")} aria-pressed={group === s.id} onClick={() => setGroup(s.id)}>
+              <div className="pd-quote-symbol"><FileText size={22} /></div><div className="pd-quote-text"><strong>{s.product}</strong><span>{s.description} · {s.area}</span><small>{s.ref} · Fictional offer, not verified by Channel3</small></div>
+              <div className="pd-quote-amount"><small>Example price</small><strong>{money(s.price)}</strong><span>{money(s.price / s.people)} each for {s.people}</span></div><CheckCircle2 size={20} className="pd-quote-check" />
+            </button>)}</div>
+            <div className="pd-share-summary">
+              <div><span>SELECTED DRAFT · {current.ref}</span><h3>{current.product}</h3><p>Equal illustrative shares, excluding tax, delivery and any actual agreement.</p></div>
+              <div className="pd-share-split"><div><small>Item price</small><strong>{money(current.price)}</strong></div><span className="pd-divide">÷ {current.people}</span><div><small>Each proposed share</small><strong>{money(current.price / current.people)}</strong></div></div>
+            </div>
+            <div className="pd-bottom-action"><button className="pd-primary" onClick={() => go("funding")}>Next: group funding <ArrowRight size={16} /></button></div>
+          </div>}
+
+          {stage === "funding" && <div className="pd-section">
+            <div className="pd-section-row"><div><h2>Accepted groups</h2><p>Pick a scenario to inspect member acceptance and payment states. This preview cannot contact PayPal.</p></div></div>
+            <div className="pd-switcher" aria-label="Choose fictional funding group">{scenarios.map(s => <button key={s.id} type="button" className={group === s.id ? "active" : ""} aria-pressed={group === s.id} onClick={() => setGroup(s.id)}>{s.product}</button>)}</div>
+            <div className="pd-funding-summary"><div><small>Fictional group · {current.product}</small><strong>{money(captured)} <span>/ {money(current.price)} simulated</span></strong><p>{rows.members.filter(r => r.payment_state === "completed").length} of {current.people} simulated captures completed · {progress}% of the example price</p></div><span className="pd-funding-state">{group === "washer" ? "Scenario complete" : "Scenario in progress"}</span></div>
+            <div className="pd-progress" role="progressbar" aria-label="Fictional funding progress" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><span style={{ width: progress + "%" }} /></div>
+            <div className="pd-members">{rows.members.map(m => <div className="pd-member-row" key={m.slot}><span className="pd-member-avatar">{m.is_you ? "Y" : String(m.slot)}</span><div><strong>{m.is_you ? "You" : "Member " + m.slot}</strong><span>{m.payment_state.replaceAll("_", " ")}</span></div><b>{m.share_display}</b><span className={"pd-payment-tag " + (m.payment_state === "completed" ? "complete" : m.payment_state === "reversed" ? "reversed" : "")}>{m.payment_state === "completed" ? "Simulated captured" : m.payment_state.replaceAll("_", " ")}</span></div>)}</div>
+            {group === "projector" && <div className="pd-simulation"><div><strong>Try the approval flow</strong><p>Only your fictional participant (Member 3) changes state. AG Grid will reflect it in the next step.</p></div>{phase === "awaiting_approval"
+              ? <button className="pd-primary" onClick={() => setPhase("approved")}>Simulate approval <ArrowRight size={15} /></button>
+              : phase === "approved" ? <button className="pd-primary" onClick={() => setPhase("completed")}>Simulate capture <ArrowRight size={15} /></button>
+              : <button className="pd-quiet-button" onClick={() => setPhase("awaiting_approval")}><Check size={15} /> Reset simulation</button>}</div>}
+            <p className="pd-warning"><ShieldCheck size={16} /> Fictitious member states, not verified PayPal events. Actual Sandbox authorization requires separate explicit approval in the live workspace.</p>
+            <div className="pd-bottom-action"><button className="pd-primary" onClick={() => go("ledger")}>Next: inspect the ledger <ArrowRight size={16} /></button></div>
+          </div>}
+
+          {stage === "ledger" && <div className="pd-section">
+            <div className="pd-section-row"><div><h2>Member contributions & event history</h2><p>Real AG Grid with fictional records. Sort, filter and export the sample CSV—no API payment records are involved.</p></div></div>
+            <div className="pd-switcher" aria-label="Choose sample ledger">{scenarios.map(s => <button key={s.id} className={group === s.id ? "active" : ""} aria-pressed={group === s.id} type="button" onClick={() => setGroup(s.id)}>{s.product}</button>)}</div>
+            <div className="pd-ledger-status"><div><small>Simulated captured</small><strong>{money(captured)}</strong></div><div><small>Target</small><strong>{money(current.price)}</strong></div><div><small>Outstanding in this scenario</small><strong>{money(current.price - captured)}</strong></div></div>
+            <div className="pd-grid-wrap"><DemoLedgerGrid members={rows.members} events={rows.events} groupId={"fictional-" + group} demo /></div>
+            <div className="pd-bottom-action"><button className="pd-primary" onClick={() => { setGroup("washer"); go("schedule"); }}>Next: shared scheduling <ArrowRight size={16} /></button></div>
+          </div>}
+
+          {stage === "schedule" && <div className="pd-section">
+            <div className="pd-section-row"><div><h2>Pressure washer · shared calendar</h2><p>Fictional whole-day reservations for the fully-funded example scenario, rendered with Bryntum Scheduler Community.</p></div><span className="pd-tag">Nov 16–22, 2026</span></div>
+            <div className="pd-timeline-shell"><DemoTimeline groupId="fictional-washer" reservations={timeline}
+              ownWindow={{ start_date: "2026-11-16", end_date: "2026-11-17" }} /></div>
+            <div className="pd-day-picker"><span>EXPLORE A DAY</span><div>{Array.from({ length: 7 }, (_, i) => { const value = "2026-11-" + String(i + 16); return <button key={value} type="button" onClick={() => setSelectedDay(value)} aria-pressed={selectedDay === value}>{i + 16}</button>; })}</div><strong>{selectedBooking ? selectedBooking.is_you ? "Your planned time" : "Member " + selectedBooking.slot + " · planned time" : "Unassigned in this sample"}</strong></div>
+            <HandoffDrawing />
+            <p className="pd-warning"><ShieldCheck size={16} /> The calendar and handover are fictional. Actual dates are saved only in the live app after verified Sandbox funding and conflict checks.</p>
+            <div className="pd-bottom-action"><button className="pd-primary" onClick={onLive}>Try the real workspace <ArrowUpRight size={16} /></button></div>
+          </div>}
+          <div className="pd-footnote"><span>ONE / MANY · PRODUCT PROTOTYPE</span><span>Fictional data · no purchases, invitations or payments created</span></div>
+        </main>
+      </div>
+    </div>
+  );
 }
