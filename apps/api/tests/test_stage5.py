@@ -256,7 +256,7 @@ def test_existing_conflict_rejected_and_reversal_blocks_changes(ctx, monkeypatch
         "expected_version": 0,
     })
     assert conflict.status_code == 409
-    assert conflict.json()["error"]["code"] == "conflict"
+    assert conflict.json()["error"]["code"] == "http_409"
 
     with sessions.begin() as db:
         group = db.get(FundingGroup, UUID(gid))
