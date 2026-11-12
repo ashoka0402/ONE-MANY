@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useState } from "react";
 import Link from "next/link";
 import { CatalogPanel, ProposalHistory } from "@/components/catalog-panel";
+import { FundingPanel } from "@/components/funding-panel";
 import {
   ArrowLeft,
   ArrowRight,
@@ -257,7 +258,7 @@ export function Workspace() {
               <span className="work-orbit-dot a" /><span className="work-orbit-dot b" /><span className="work-orbit-dot c" />
             </div>
           </div>
-          <span className="work-footnote">STAGE 2 · AI INTENT + PRIVATE MATCHING</span>
+          <span className="work-footnote">STAGE 4 · PAYPAL SANDBOX FUNDING</span>
         </section>
         <section className="work-auth-panel">
           <div className="work-auth-card">
@@ -291,7 +292,7 @@ export function Workspace() {
                 {mode === "register" ? "Sign in" : "Create account"}
               </button>
             </p>
-            <p className="work-auth-disclaimer"><ShieldCheck size={15} /> No live purchases or payments are available yet.</p>
+            <p className="work-auth-disclaimer"><ShieldCheck size={15} /> Any payments are PayPal Sandbox simulations. No real money or purchases.</p>
           </div>
         </section>
       </div>
@@ -307,14 +308,14 @@ export function Workspace() {
         <nav aria-label="Workspace navigation">
           <a href="#needs" className="active"><Lightbulb size={18} /> Your needs</a>
           <a href="#next"><Users size={18} /> Shared groups</a>
-          <a href="#next"><CreditCard size={18} /> Contributions</a>
+          <a href="#funding"><CreditCard size={18} /> Contributions</a>
           <a href="#next"><CalendarDays size={18} /> Scheduling</a>
         </nav>
         <div className="work-sidebar-profile"><div className="work-avatar">{user.display_name.slice(0, 1).toUpperCase()}</div><div><strong>{user.display_name}</strong><span>{user.email}</span></div></div>
         <button className="work-logout" type="button" onClick={signOut}><LogOut size={16} /> Sign out</button>
       </aside>
       <div className="app-main">
-        <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">STAGE 3 · REAL PRODUCT DATA</span></header>
+        <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">STAGE 4 · PAYPAL SANDBOX</span></header>
         <main id="main" className="work-main">
           <section className="work-intro">
             <div><p className="eyebrow"><span className="status-dot" /> THE FIRST STEP</p><h1>What&apos;s on your<br /><em>mind today?</em></h1><p>Describe what you need. AI can identify reusable items, then find possible shared ownership opportunities with your consent.</p></div>
@@ -425,8 +426,9 @@ export function Workspace() {
             </section>
           </div>
           <ProposalHistory token={token} />
+          <FundingPanel token={token} needs={needs} />
           <section id="next" className="work-next">
-            <div><span className="work-kicker">STAGE 2 · INTERPRET AND DISCOVER</span><h2>Different needs. A possible shared solution.</h2><p>Gemini extracts reusable asset requirements; deterministic rules identify potential neighbors without exposing their identities. Channel3 now provides real merchant products and draft price snapshots. PayPal payments and actual scheduling arrive in later stages.</p></div>
+            <div><span className="work-kicker">STAGE 4 · VERIFIED DEMO CHECKOUT</span><h2>Discovery becomes explicit participation.</h2><p>Compatible people can now join a funding group, approve their own Sandbox contribution, and verify captured amounts through PayPal. Physical purchases, fulfillment and scheduling remain separate future steps.</p></div>
             <div className="work-next-icon" aria-hidden="true"><Users size={35} /></div>
           </section>
         </main>

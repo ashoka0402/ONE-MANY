@@ -27,11 +27,27 @@ class Settings(BaseSettings):
     channel3_currency: str = Field(default="USD", pattern=r"^[A-Z]{3}$")
     channel3_timeout_seconds: float = Field(default=12.0, ge=3, le=30)
     max_proposal_participants: int = Field(default=8, ge=2, le=30)
+    paypal_client_id: SecretStr | None = None
+    paypal_client_secret: SecretStr | None = None
+    paypal_webhook_id: SecretStr | None = None
+    paypal_merchant_id: str | None = None
+    paypal_timeout_seconds: float = Field(default=12.0, ge=3, le=30)
+    public_web_url: str = Field(default="http://localhost:3000", min_length=10)
+    funding_group_lifetime_hours: int = Field(default=6, ge=1, le=48)
 
     @model_validator(mode="after")
     def credentials_for_production(self) -> "Settings":
         if self.auth_secret is not None and len(self.auth_secret.get_secret_value()) < 32:
             raise ValueError("AUTH_SECRET must contain at least 32 characters")
+        from urllib.parse import urlsplit
+
+        web = urlsplit(self.public_web_url)
+        if web.scheme not in ("http", "https") or not web.hostname or web.username or web.password:
+            raise ValueError("PUBLIC_WEB_URL must be a valid http(s) origin")
+        if web.path not in ("", "/") or web.query or web.fragment:
+            raise ValueError("PUBLIC_WEB_URL must be an origin, not a path")
+        if self.environment == "production" and web.scheme != "https":
+            raise ValueError("Production PUBLIC_WEB_URL must be HTTPS")
         if self.environment == "production":
             if self.auth_secret is None or self.database_url is None:
                 raise ValueError("Production requires AUTH_SECRET and DATABASE_URL")

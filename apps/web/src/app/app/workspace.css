@@ -149,3 +149,54 @@
 .catalog-history-list strong { color:#273b26; font-size:13px; }
 .catalog-history-list span,.catalog-history-list small { color:#697d62; font-size:11px; }
 @media(max-width:620px) { .catalog-heading { align-items:flex-start; flex-direction:column; } .catalog-product { flex-direction:column; } .catalog-draft-metrics { grid-template-columns:1fr; } .catalog-history { padding:20px; } .catalog-history-top { align-items:flex-start; flex-direction:column; } }
+
+/* Stage 4: member-approved PayPal Sandbox funding, clear separation from commerce. */
+.funding-panel { border:1px solid #d9e2d5; background:#fffefa; border-radius:14px; margin-top:24px; padding:30px; display:flex; flex-direction:column; gap:17px; }
+.funding-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:18px; }
+.funding-heading h2 { font-size:27px; letter-spacing:-.8px; font-weight:570; margin:8px 0; color:#17271b; }
+.funding-heading p { color:#687a60; font-size:12px; line-height:1.65; max-width:620px; }
+.funding-heading>button { border:1px solid #c9d8c2; color:#365a31; background:#e9f2e4; padding:11px 12px; border-radius:8px; display:flex; align-items:center; gap:8px; font-size:11px; font-weight:650; cursor:pointer; flex-shrink:0; }
+.funding-heading>button:disabled,.funding-box button:disabled,.funding-group button:disabled { opacity:.5; cursor:not-allowed; }
+.funding-warning { display:flex; gap:9px; align-items:flex-start; border:1px solid #eecdb0; background:#fff4e8; border-radius:9px; padding:13px 15px; font-size:11px; line-height:1.65; color:#8a5624; }
+.funding-warning svg { flex-shrink:0; margin-top:1px; }
+.funding-helper { color:#556c4c; background:#f3f8ee; border-radius:8px; font-size:11px; line-height:1.7; padding:11px 14px; }
+.funding-columns { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
+.funding-box { border:1px solid #e0e6dc; background:#fbfcf9; border-radius:10px; padding:20px; display:flex; flex-direction:column; gap:12px; min-width:0; }
+.funding-box h3,.funding-group-list h3 { color:#233624; font-size:19px; font-weight:600; letter-spacing:-.5px; }
+.funding-box>p,.funding-box>small { color:#6e8066; font-size:11px; line-height:1.6; }
+.funding-box label { color:#435b40; font-size:11px; font-weight:650; display:flex; flex-direction:column; gap:6px; }
+.funding-box input,.funding-box select { width:100%; min-width:0; background:#fff; border:1px solid #cfddc8; border-radius:7px; padding:12px; color:#1f331e; font-size:12px; }
+.funding-box input:focus-visible,.funding-box select:focus-visible { outline:2px solid #9ac579; outline-offset:1px; }
+.funding-box button,.funding-group button { display:inline-flex; gap:8px; justify-content:center; align-items:center; cursor:pointer; font-size:11px; font-weight:650; border-radius:8px; padding:10px 13px; }
+.funding-main { color:#102011; background:#b8f26a; border:1px solid #a3dc56; }
+.funding-main:hover:not(:disabled) { background:#a7df57; }
+.funding-secondary { color:#365733; background:#eff5e9; border:1px solid #d2e4c9; }
+.funding-secondary:hover:not(:disabled) { background:#e0eed6; }
+.funding-proposal { display:flex; flex-direction:column; gap:7px; border:1px solid #d9e3d1; border-radius:8px; padding:12px; background:#fff; }
+.funding-proposal strong { font-size:12px; color:#263a27; line-height:1.4; }
+.funding-proposal span,.funding-proposal small { color:#708169; font-size:10px; line-height:1.4; }
+.funding-proposal button { background:#233b25; color:white; align-self:flex-start; }
+.funding-invite { display:flex; flex-direction:column; gap:8px; padding:13px; border-radius:9px; background:#e9f7dc; border:1px solid #c8e2b2; }
+.funding-invite strong { color:#2a5129; font-size:12px; }
+.funding-invite code { white-space:normal; overflow-wrap:anywhere; color:#3b5e30; font-size:12px; }
+.funding-invite button { background:#b8f26a; color:#1d3718; align-self:flex-start; }
+.funding-invite small { color:#546c50; font-size:10px; line-height:1.5; }
+.funding-group-list { display:flex; flex-direction:column; gap:12px; }
+.funding-group-list>p { color:#70806b; font-size:12px; }
+.funding-group { display:flex; flex-direction:column; gap:14px; border:1px solid #dae5d1; background:#fafdf7; border-radius:11px; padding:18px; }
+.funding-group-title { display:flex; justify-content:space-between; gap:14px; align-items:flex-start; }
+.funding-state { display:inline-block; border-radius:30px; background:#e0edcf; color:#487236; font-size:9px; font-weight:750; text-transform:uppercase; letter-spacing:.8px; padding:5px 8px; }
+.funding-group-title h4 { font-size:17px; margin-top:9px; line-height:1.4; font-weight:600; }
+.funding-group-title>strong { font-size:18px; color:#294b25; white-space:nowrap; }
+.funding-group-title>strong small { display:block; text-align:right; color:#7b8d73; font-size:10px; font-weight:500; margin-top:5px; }
+.funding-group>p { color:#708366; font-size:11px; line-height:1.6; }
+.funding-ledger { display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:9px; }
+.funding-ledger>div { border:1px solid #dfe8d9; background:#fff; border-radius:9px; padding:12px; display:flex; flex-direction:column; gap:4px; }
+.funding-ledger>div.paid { border-color:#b5d8a1; background:#f0fae9; }
+.funding-ledger span { font-size:10px; color:#64775e; }
+.funding-ledger strong { font-size:15px; color:#254022; }
+.funding-ledger small { font-size:9px; color:#7c8b75; text-transform:capitalize; }
+.funding-group-ctas { display:flex; flex-wrap:wrap; gap:10px; }
+.funding-success { color:#2b6d29!important; display:flex; align-items:center; gap:9px; font-weight:650; }
+@media(max-width:860px) { .funding-columns { grid-template-columns:1fr; } .funding-heading { flex-direction:column; } }
+@media(max-width:530px) { .funding-panel { padding:19px; } .funding-group-title { flex-direction:column; } .funding-group-title>strong small { text-align:left; } .funding-heading h2 { font-size:24px; } }
