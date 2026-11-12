@@ -214,7 +214,7 @@ export function FundingPanel({ token, needs }: { token: string; needs: Need[] })
     <section id="funding" className="funding-panel" aria-labelledby="funding-title">
       <div className="funding-heading">
         <div>
-          <span className="work-kicker">04 / PAYPAL SANDBOX</span>
+          <span className="work-kicker">03 / PAYPAL SANDBOX</span>
           <h2 id="funding-title">Fund a shared possibility.</h2>
           <p>Invite real participants in the demo, receive explicit acceptance, then authorize individual Sandbox payments.</p>
         </div>
