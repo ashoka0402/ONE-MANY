@@ -214,7 +214,7 @@ export function ProposalHistory({ token }: { token: string }) {
   return (
     <section className="catalog-history" aria-label="Saved draft quotes">
       <div className="catalog-history-top">
-        <div><span className="work-kicker">03 / COST SHARING</span><h2>Saved draft quotes</h2></div>
+        <div><span className="work-kicker">02 / COST SHARING</span><h2>Saved draft quotes</h2></div>
         <button type="button" disabled={busy} onClick={() => void refresh()}>
           {busy ? <LoaderCircle className="work-spinner" size={14} /> : <Search size={14} />} Load saved drafts
         </button>
