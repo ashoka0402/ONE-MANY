@@ -59,3 +59,18 @@ Match admission: same AI-normalized asset label and normalized self-reported are
 - `GET /api/v1/proposals/{id}`: returns only caller's draft; others receive 404.
 
 Proposal response includes owner-owned need ID, provider product ID, merchant link, actual price/currency, prospect count, exact integer-minor-unit shares, hypothetical savings, quote expiry and disclaimers. No actual buyer commitments, fees or shipping are included. Future payment flows MUST reconfirm the price, offer, peer membership/consent, scheduling and amount before creating any PayPal order. No escrow, purchase, or PayPal charge is initiated.
+
+
+## Stage 4 — Funding and Sandbox Orders v2
+
+All routes under `/api/v1` unless noted.
+
+- `POST /proposals/{id}/funding-group` — organizer-only, rechecks a fresh Stage 3 quote and live Channel3 offer; creates a recruiting pool and accepts the organizer's need. Returns `{group,invite_code}`; the code is only presented on creation or explicit rotation.
+- `POST /funding/join` with `{invite_code,need_id}` — authenticated new member explicitly accepts a slot using their own open, opt-in, AI-analyzed need. Requires same normalized area and asset, compatible features and known non-overlapping date windows. No payment is made on joining.
+- `POST /funding/groups/{id}/rotate-invite` — organizer-only while recruiting; invalidates old invite.
+- `GET /funding/groups` and `GET /funding/groups/{id}` — authenticated members only; anonymized per-slot amounts and payment states, no other member's identity.
+- `POST /funding/groups/{id}/paypal-order` — accepted member only after group fills, rechecks dates, consent and current Channel3 price, and creates/reuses one fixed-amount PayPal Sandbox order. Returns trusted PayPal approval URL; no browser-chosen amount.
+- `POST /funding/groups/{id}/paypal-capture` — member only. Uses stored PayPal order, queries PayPal, captures with fixed idempotency key if approved, independently re-fetches and validates amount/currency/capture status and ID. A PENDING capture never counts as completed.
+- `POST /paypal/webhook` — publicly reachable endpoint that verifies signature with PayPal Sandbox, deduplicates event IDs, and reconciles `PAYMENT.CAPTURE.COMPLETED` by fetching the stored order again. A verified `DENIED` or `REFUNDED` event triggers review and excludes the reversed share.
+
+States: recruiting, funding, funded, needs_review, cancelled. Each payment attempt: creating, awaiting_approval, capture_pending, completed, needs_review, reversed. All PayPal flows are Sandbox-only merchant payments, not escrow or production transfers. The group is funded only when verified captures from every participant exactly sum to the quote.

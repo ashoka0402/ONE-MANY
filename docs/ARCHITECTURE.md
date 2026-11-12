@@ -67,3 +67,24 @@ GET /proposals — owner only
 ```
 
 Business constraints: product search does not auto-purchase. Only a server-validated real retailer offer can produce a draft; browser amount fields are not trusted. Matching members are prospective, not committed. The price snapshot expires after 30 minutes and Stage 4 must revalidate offer amount/currency, participants and terms before any PayPal action. No credit card or PayPal token is handled in Stage 3.
+
+
+## Stage 4 — Explicitly accepted PayPal Sandbox funding
+
+```text
+Stage 3 Channel3 quote (fresh, selected merchant offer)
+  -> POST /proposals/{id}/funding-group
+  -> Organizer automatically accepts a slot; invitation code stored as SHA-256 hash
+  -> Each invited account submits an independently compatible need and joins explicitly
+  -> All slots accepted, dates and features rechecked => funding
+  -> Each member creates ONE persisted PayPal Sandbox order at fixed share amount
+  -> Buyer approves on www.sandbox.paypal.com
+  -> Re-authenticate, then server GETs order and captures with stable idempotency key
+  -> Server GETs the order again, validates single COMPLETED capture
+  -> All verified captures, exact summed amount => funded
+  -> Any signed reversal/denial or captured-amount mismatch => needs_review
+```
+
+**Database:** `funding_groups` stores an owner, immutable quote reference, hashed invitation, target size, fixed total and expiry. `funding_members` stores unique user/need/slot and accepted share. `payment_attempts` stores one order per member/group with unique PayPal order and capture IDs and a durable request key derived from its UUID. `paypal_webhook_events` retains verified event IDs against retries and replay. Alembic revision `20261112_04` owns all tables.
+
+**Trust boundaries:** The frontend never supplies a price, capture ID or PayPal order for reconciliation. PayPal OAuth credentials and Channel3 keys stay on the backend. An API-approved return URL is not proof of payment. Orders are checked against expected group/reference, per-member custom_id, currency, exact amount and a single completed capture. PayPal webhooks must pass PayPal signature verification and are reconciled to the stored order before marking completed. Reversed captures are excluded from the ledger. No production PayPal endpoint, escrow, automatic refunds or physical retailer order is included.
