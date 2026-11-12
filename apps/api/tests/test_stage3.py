@@ -215,12 +215,6 @@ def test_real_workflow_contract_with_fake_provider_only_in_test(client, monkeypa
     a, b, own, peer = prepare_group(client, monkeypatch)
     assert client.get(f"/api/v1/needs/{own}/matches", headers=a).json()["potential_members"] == 1
 
-    with patch(
-        "one_many_api.catalog_routes.Channel3Client.search",
-        return_value=Channel3Client(Settings(_env_file=None, channel3_api_key="test-only")),
-    ):
-        pass  # provider calls below are mocked at HTTP boundary instead
-
     calls = []
 
     def fake_http(method, url, *, headers, json, timeout, follow_redirects):

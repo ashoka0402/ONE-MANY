@@ -297,7 +297,7 @@ class Channel3Client:
         safe_id = quote(product_id, safe="")
         result = self._fetch(
             "GET",
-            f"/v1/products/{safe_id}",
+            f"/v1/products/{safe_id}?country={self.settings.channel3_country}&currency={self.settings.channel3_currency}",
         )
         product = normalize_product(result, self.settings.channel3_currency, required, excluded)
         if product.id != product_id:

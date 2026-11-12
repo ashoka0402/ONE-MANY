@@ -1,6 +1,6 @@
 # Stage 3 — Product discovery and draft proposals
 
-Status: **Implemented in source; verify via latest GitHub Actions run before calling fully green**.
+Status: **Stage 3 complete at the automated build/test level**. Stage 4 has not started.
 
 ## Added
 - Real Channel3 search (`POST /v1/search`) for the Gemini-extracted reusable asset and stated required features.
@@ -17,4 +17,4 @@ Status: **Implemented in source; verify via latest GitHub Actions run before cal
 
 ## Testing
 - Stage 2 last fully verified: [GitHub Actions run 43089960294](https://github.com/ashoka0402/ONE-MANY/actions/runs/43089960294).
-- Stage 3 tests and migration/quote smoke will run through GitHub Actions. Fixtures represent network/provider responses in tests only, not production data.
+- Stage 3 checks passed in [GitHub Actions run 43157650820](https://github.com/ashoka0402/ONE-MANY/actions/runs/43157650820): 34 backend tests, Ruff, Next.js lint/typecheck/build, Alembic revision 20261112_03, a PostgreSQL-backed draft quote smoke test and Compose validation. After the final hardening, permanent CI runs without write access or autoformat steps. Live Channel3 credentials and actual merchant availability were not tested.
