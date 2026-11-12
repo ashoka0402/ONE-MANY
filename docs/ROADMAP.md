@@ -1,6 +1,6 @@
 # Roadmap
 
-Current stage: **4 — member-approved PayPal Sandbox funding and capture verification** (automated checks passed; Stage 5 awaits authorization). Hackathon deadline: **November 13, 2026 at 01:30 IST**.
+Current stage: **5 — Bryntum Community scheduling and server-enforced provisional reservations** (automated verification passed; Stage 6 AG Grid ledger awaits authorization). Hackathon deadline: **November 13, 2026 at 01:30 IST**.
 
 | Stage | Scope | Acceptance criteria |
 | --- | --- | --- |
@@ -9,7 +9,7 @@ Current stage: **4 — member-approved PayPal Sandbox funding and capture verifi
 | 2 | AI matching | Real Gemini structured extraction, explicit consent, privacy-preserving anonymous matching with conservative date/feature/area checks, provider failure and cache tests |
 | 3 | Channel3/product proposals | Real API adapter, live-offer recheck, strict price validation, immutable owner-only draft snapshots and deterministic hypothetical splits; provider test fixtures in CI |
 | 4 | PayPal Sandbox funding | Implemented: explicit participant join, sandbox Orders v2 checkout, independent capture verification, idempotent retries, signed webhook handling, 41 passing backend tests and PostgreSQL smoke |
-| 5 | Bryntum scheduling | Licensed integration, authorized reservations, conflict tests and timezone rules |
+| 5 | Bryntum scheduling | Real MIT-licensed Community v8 timeline, authenticated member-owned date-only booking, server-enforced no-overlap and PostgreSQL GiST exclusion constraint, cancel/version tests |
 | 6 | AG Grid ledger | Verified contribution data, ownership breakdown and auditable presentation |
 | 7 | Demo / delivery | Hosted functioning app or reproducible setup, end-to-end checkout demo, public GitHub license, <=3 minute YouTube video, Devpost |
 

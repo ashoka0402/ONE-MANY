@@ -2,7 +2,7 @@
 
 Read [STATUS](docs/STATUS.md), [ROADMAP](docs/ROADMAP.md), and [ARCHITECTURE](docs/ARCHITECTURE.md) before making changes. Consult [DECISIONS](docs/DECISIONS.md) and [integration contracts](docs/INTEGRATION_CONTRACTS.md) for relevant decisions.
 
-- Stage 4 is the current scope. Do not implement Stage 5 or later without explicit request. PayPal is SANDBOX-ONLY; all member acceptance is explicit and captures must be independently verified. Sandbox receipts are not escrow. Preserve the authenticated user-owned needs API.
+- Stage 5 is the current scope. Do not implement Stage 6 or later without explicit request. The Bryntum Community calendar is read-only; only authenticated members may mutate their own provisional reservations through FastAPI. PostgreSQL exclusion constraints and verified Sandbox funding are mandatory. Preserve the authenticated user-owned needs API.
 - Preserve the Next.js frontend / FastAPI backend architecture and stable `/api/v1` contracts.
 - Make minimal, scoped changes. Reuse existing components and dependencies; do not rewrite unrelated modules.
 - Keep TypeScript in `apps/web`, Python in `apps/api`, and architecture / handoff documents in `docs`.

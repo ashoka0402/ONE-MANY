@@ -74,3 +74,16 @@ All routes under `/api/v1` unless noted.
 - `POST /paypal/webhook` — publicly reachable endpoint that verifies signature with PayPal Sandbox, deduplicates event IDs, and reconciles `PAYMENT.CAPTURE.COMPLETED` by fetching the stored order again. A verified `DENIED` or `REFUNDED` event triggers review and excludes the reversed share.
 
 States: recruiting, funding, funded, needs_review, cancelled. Each payment attempt: creating, awaiting_approval, capture_pending, completed, needs_review, reversed. All PayPal flows are Sandbox-only merchant payments, not escrow or production transfers. The group is funded only when verified captures from every participant exactly sum to the quote.
+
+
+## Stage 5 — Provisional reservations
+
+All endpoints are authenticated, group-member-only, under `/api/v1`.
+
+- `GET /funding/groups/{group_id}/reservations` returns group ID, product title, current group state, bookable flag, **caller's last version**, caller's own permitted need window, and active reservation rows (UUID, anonymous member slot number, inclusive start/end civil dates, version, is_you). No other member IDs, emails or raw descriptions.
+- `PUT /funding/groups/{group_id}/reservation` accepts `{start_date:"YYYY-MM-DD",end_date:"YYYY-MM-DD",expected_version:N}`. Requires fully funded group with every accepted member's verified completed Sandbox contribution, current compatible opt-in needs, caller's own window, and non-overlap with other active reservations. The first write uses `expected_version=0`; subsequent changes must pass the latest caller-only version. Repeating the exact same active dates is idempotent. A successful write returns the updated board.
+- `DELETE /funding/groups/{group_id}/reservation` cancels only caller's reservation, increments the version and returns the updated board. Repeating a cancellation is harmless. Cancellation remains available in review state.
+
+PostgreSQL enforces `UNIQUE(group_id,user_id)` and an active-only GiST exclusion on group and inclusive `daterange(start_date,end_date+1,'[)')`. The API additionally locks the group row for serialization and checks overlap; races are caught as HTTP 409. Missing funding, date conflicts, or stale versions are rejected, never silently displayed as success.
+
+This is a *provisional shared-use plan*, not a retailer purchase, verified physical inventory, handover contract, or timezone-precise reservation. The Bryntum timeline is read-only; the server is the only source of booking state.

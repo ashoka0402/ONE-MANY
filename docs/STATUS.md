@@ -1,20 +1,23 @@
-# Stage 4 — PayPal Sandbox funding and reconciliation
+# Stage 5 — Bryntum scheduling and shared-use reservations
 
-**Stage 4 complete at the automated build/test level.** The PayPal Sandbox API and browser redirect have not been exercised with real credentials.
+Status: **Stage 5 complete at the automated build/test level**. Browser-level and live third-party QA remain deferred.
 
 ## Implemented
 
-- Persisted, time-limited funding groups, hashed invitations, owner-linked memberships and single-attempt payment ledgers through Alembic revision `20261112_04`.
-- Explicit member acceptance and compatibility checks before any order. Potential AI matches are not charged or automatically joined.
-- Real PayPal Sandbox OAuth + Orders v2 API adapter, fixed server-owned amounts, stable create/capture idempotency keys, order and completed-capture verification.
-- Server-side signature verification for PayPal webhooks and deduplication by verified event ID. Refund/denial events mark the group for review and remove reversed captures from the completed total.
-- UI for invitations, joining, PayPal approval and post-redirect reconciliation.
-- Tests with provider mocks confined to test code, covering ownership, amount mismatches, duplicate attempts, consent withdrawal and webhook replay.
+- Bryntum Scheduler Community v8 (MIT, public npm) inside a client-only Next.js timeline, without a commercial license key.
+- Client displays *real authenticated reservation rows* as read-only scheduler events; no fictional demo events or hardcoded booking data.
+- Date-only REST APIs: GET reservations, PUT the caller's own reservation with an optimistic version, DELETE/cancel the caller's reservation.
+- Booking permitted only for an explicitly accepted group with all independently verified Sandbox captures and matching total. Need eligibility and non-overlapping member windows are revalidated.
+- Reservations restricted to the caller's own need window; only one active booking per group/member; only members may view anonymous slot labels.
+- Cancelled rows remain in the database with incremented versions, but disappear from the shared active timeline. An owning member can rebook using the returned `own_version`.
+- Group-row locking and an independent PostgreSQL GiST exclusion constraint prevent concurrent overlapping active date windows.
+- A `needs_review` group blocks edits/new reservations but permits cleanup cancellation.
+- Tests cover authorization, unfunded state, stale versions, invalid date windows, cancellation/rebooking, privacy, app-level conflicts and DB-level overlap exclusion.
 
-## Still pending
+## Test status
 
-GitHub Actions [run 43161652139](https://github.com/ashoka0402/ONE-MANY/actions/runs/43161652139) passed: **41 backend tests**, Ruff, Next.js ESLint/TypeScript/production build, PostgreSQL migration `20261112_04`, a live PostgreSQL recruitment and persisted PayPal order-attempt smoke test, and Docker Compose configuration. Live Gemini/Channel3/PayPal credentials, buyer approval, browser redirect and HTTPS webhook tests remain intentionally deferred to final manual QA. Provider responses are fixtures only inside tests.
+[GitHub Actions run 43164775217](https://github.com/ashoka0402/ONE-MANY/actions/runs/43164775217) passed **45 Python tests**, Ruff lint, frontend ESLint and TypeScript, Next.js production build with Bryntum Community v8, Alembic migration `20261112_05` against PostgreSQL, authenticated reservation write/read smoke, a deliberate GiST overlap violation, and Compose validation. Temporary dependency lockfile generation was removed from the permanent workflow; CI is read-only.
 
-## Boundaries
+## Deferred manual checks
 
-Sandbox payments are fake merchant payments, not escrow, shared legal ownership, authorized retailer purchase or a guarantee of a refund. Only server-verified completed captures count. No real-money mode exists.
+Live Gemini and Channel3 keys, PayPal Sandbox buyer authorizations/capture, incoming verified webhooks, cross-browser Bryntum visual checks and deployment are intentionally reserved for the final validation. No physical asset has been delivered; all bookings are provisional.

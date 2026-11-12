@@ -2,71 +2,45 @@
 
 **Many people. One smarter purchase.**
 
-ONE / MANY helps people discover compatible requests and propose shared purchases. Stages 1–4 implement authenticated needs, AI matching, real Channel3 catalog quotes, and member-approved PayPal **Sandbox-only** funding. No physical retailer purchase is made.
+ONE / MANY is an AI-assisted shared-asset purchasing and scheduling prototype. People independently describe needs; Gemini identifies potentially reusable assets, the backend finds compatible opted-in requests, Channel3 supplies live product candidates, and PayPal **Sandbox** demonstrates independently authorized contributions. Bryntum Scheduler Community displays persisted, non-overlapping provisional usage reservations.
 
-## Stage 4: PayPal Sandbox funding
+## Implemented
 
-Stage 4 adds member-approved **Sandbox-only** checkout to the existing Gemini + Channel3 workflow. A potential AI match does not enroll or charge anybody.
+| Stage | Feature | Backend source of truth |
+| --- | --- | --- |
+| 0 | Next.js/FastAPI, PostgreSQL, CI, responsive branding | GitHub Actions |
+| 1 | User accounts, private needs CRUD | PostgreSQL and JWT authentication |
+| 2 | Real Gemini structured extraction, anonymous opt-in matches | Strict Pydantic validation and matching constraints |
+| 3 | Real Channel3 product lookup, in-stock offer recheck, accurate draft shares | Channel3 product/offer API + exact minor-unit arithmetic |
+| 4 | Explicitly joined funding groups, PayPal Orders v2 Sandbox, verified capture ledger and signed webhook handling | PayPal Sandbox and PostgreSQL |
+| 5 | Bryntum Scheduler Community, authorized member reservations, edit/cancel, DB-level conflict prevention | PostgreSQL GiST exclusion constraint |
 
-1. The organizer creates a funding group from a fresh Stage 3 catalog draft. The backend rechecks the selected merchant price.
-2. The organizer shares an invitation code. A second account explicitly joins using its own compatible, opted-in need, with a non-overlapping date window.
-3. After all slots are accepted, each participant chooses PayPal Sandbox approval for **their own exact share**. The server rechecks eligibility and the live Channel3 offer.
-4. PayPal redirects back to the app. Because access tokens are memory-only, sign in again, refresh the group list and click **Verify / capture approved payment**.
-5. The backend fetches the PayPal order, checks reference IDs, exact amount and currency, performs idempotent capture when approved, then checks PayPal again. Only a verified COMPLETED capture increases the ledger.
-6. The group is funded only if every accepted participant has a verified capture and the total matches the quote. Verified signed webhook events also reconcile completion and reversals.
+**Scope:** This is a hackathon prototype. PayPal Sandbox uses fake money; no real retailer order, escrow, legal shared ownership, automatic refund, verified physical handover or shipping is performed. All reservations are *provisional usage plans* rather than real-world inventory commitments.
 
-**Important:** Sandbox payments use fake money. Funds go to the test merchant account, **not escrow**; no retailer purchase, automatic refunds, asset delivery, or legal co-ownership is implemented.
+## Run locally
 
-### Deferred credentials
-
-Add these **server-only** values to `apps/api/.env` during final manual QA, not to GitHub:
-
-```dotenv
-PAYPAL_CLIENT_ID=your_sandbox_client_id
-PAYPAL_CLIENT_SECRET=your_sandbox_client_secret
-PAYPAL_WEBHOOK_ID=your_sandbox_webhook_id
-PUBLIC_WEB_URL=http://localhost:3000
-```
-
-A webhook listener must be publicly accessible via HTTPS to receive PayPal events; register `POST /api/v1/paypal/webhook` in the Sandbox app for capture completed, pending, denied and refunded notifications. The adapter has **no production PayPal URL**. PayPal Orders v2 does not support INR as an ordinary Checkout currency, so the app rejects INR funding groups rather than silently converting amounts.
-
-Apply the new migration: `cd apps/api && python -m alembic upgrade head`. The rest of the Stage 3 setup and test commands below remain applicable.
-
-## What is actually implemented
-
-- Stage 1: registered accounts, password hashing, private PostgreSQL needs and API ownership checks.
-- Stage 2: opt-in anonymous matching, real Gemini structured extraction and conservative feature/date/area gates.
-- Stage 3: **Channel3 REST API** with server-only API key, search and product detail lookup, real normalized merchant offers, valid in-stock currency/price filtering, quote snapshots based on potential matches, exact minor-unit allocation, and authenticated draft history.
-- Browser workspace: click Analyze, opt in, Find potential matches, Find products, select an in-stock merchant offer, Save draft quote, Load saved drafts.
-- If Channel3 or Gemini credentials are missing, the corresponding endpoint returns 503. Neither provider has a hardcoded production fallback.
-
-[Status](docs/STATUS.md) · [Architecture](docs/ARCHITECTURE.md) · [Integration contracts](docs/INTEGRATION_CONTRACTS.md) · [Roadmap](docs/ROADMAP.md)
-
-## Setup
-
-Use Node 22.12+, Python 3.12+, Docker Compose and PostgreSQL. From repository root, set up the DB:
+Requirements: Node.js 22.12+, Python 3.12+, Docker Compose and a local PostgreSQL 17 service.
 
 ```powershell
+# From repo root
 Copy-Item .env.example .env
-# Configure a unique POSTGRES_PASSWORD in root .env.
+# Set POSTGRES_PASSWORD in .env
 docker compose up -d --wait postgres
-```
 
-From `apps/api`:
-
-```powershell
+# In API directory
+cd apps/api
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 Copy-Item .env.example .env
-# Configure DATABASE_URL, AUTH_SECRET, GEMINI_API_KEY, CHANNEL3_API_KEY
-# Never commit apps/api/.env
+# Set DATABASE_URL and a strong, unique AUTH_SECRET
+# For live integrations also set GEMINI_API_KEY and CHANNEL3_API_KEY
+# For Sandbox integration set PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET
+# For deployed redirect set PUBLIC_WEB_URL to the HTTPS application origin
 .\.venv\Scripts\python.exe -m alembic upgrade head
-.\.venv\Scripts\python.exe -m uvicorn one_many_api.main:app --reload --host 127.0.0.1 --port 8000
+.\.venv\Scripts\python.exe -m uvicorn one_many_api.main:app --reload --port 8000
 ```
 
-Set `CHANNEL3_COUNTRY=US` and `CHANNEL3_CURRENCY=USD` for the default demo, or use a supported country/currency pair. The API rejects mismatched currencies in offers and does not perform FX conversion. Channel3 developer account: https://trychannel3.com/developers.
-
-In another terminal, from repository root:
+Start the Next.js frontend in a second terminal, from the repo root:
 
 ```powershell
 npm ci --prefix apps/web
@@ -74,9 +48,30 @@ Copy-Item apps/web/.env.example apps/web/.env.local
 npm run dev:web
 ```
 
-Visit http://localhost:3000/app. To draft a shared purchase, create two accounts with different nonoverlapping date windows in the same self-reported area, opt into discovery for both needs, and analyze them. On the first account, Find potential matches, Find products, then choose an eligible Channel3 offer and Save draft quote.
+Open http://localhost:3000/app. The API Swagger UI is at http://localhost:8000/docs.
 
-## Checks
+## Intended application flow
+
+1. Register separate users. Each creates a natural-language need with an explicitly opted-in area and **complete, non-overlapping** required date range.
+2. Each user clicks **Analyze with Gemini**. AI extraction is sent to the configured external provider only on that action; no fake fallback exists.
+3. Discover matching needs in the same normalized area, then query Channel3 for real asset candidates and actual merchant offers.
+4. Save a draft quote. The amount comes from Channel3, and shares are computed by deterministic integer arithmetic.
+5. Create a funding group. Each prospective participant **explicitly** joins using an authenticated compatible need and invitation.
+6. Everyone approves their own share through PayPal Sandbox. Re-authenticate after returning to the app and use **Verify/capture**. The server checks PayPal's order and completed capture before counting it.
+7. When every contribution is independently verified, load the **Shared-use calendar**. Choose a group, check your allowed need window and save your provisional whole-day reservation.
+8. Other group members can see anonymous booking slots and reserve only their own available days. They cannot edit or cancel another member's reservation. All writes are validated by the backend and PostgreSQL's overlap exclusion constraint.
+
+## Scheduling model
+
+Stage 5 retains **inclusive whole-day civil dates** from the existing needs schema. Bryntum receives each booking as a start date plus the exclusive day *after* the last date, consistent with its timeline event model. There are no timestamps or silently inferred IANA time zones. Adjacent days are allowed; sharing within a day, shipping time, travel and handover buffers are **not** modeled. An owner can have at most one active reservation per funding group. A group marked `needs_review` cannot add or change bookings, but existing plans remain visible to its members and can be cancelled.
+
+An application group must be `funded` with **all** matching completed Sandbox capture records before reservations may be created. All accepted members have separate needs. PostgreSQL serializes scheduling mutations via a row lock on the group and rejects overlapping active dates independently using a GiST exclusion constraint. A version number prevents stale scheduling edits. The frontend is intentionally read-only: form changes are sent to FastAPI, never directly edited in Bryntum's event store.
+
+### Bryntum licensing
+
+Uses `@bryntum/scheduler-community` and `@bryntum/scheduler-react-community`, pinned at **8.0.0** from the public npm registry. The Community tier is **MIT-licensed and free**; it does **not require an API key or paid license**. See [Bryntum's official tiers FAQ](https://bryntum.com/tiers-faq/) and [React integration guide](https://www.bryntum.com/docs/guide/Scheduler/integration/react/guide). It is rendered via a client-only dynamic Next.js import, with one structural CSS file and one light theme.
+
+## Automated validation
 
 ```powershell
 npm run lint:web
@@ -88,10 +83,8 @@ cd apps/api
 .\.venv\Scripts\python.exe -m alembic current
 ```
 
-GitHub CI tests the provider HTTP contract using mocks (not fake production responses), validates the PostgreSQL migration and builds an authenticated, persisted quote against a deterministic test fixture.
+GitHub Actions additionally applies migrations on PostgreSQL, exercises actual authenticated funding/reservation writes, and deliberately attempts an overlapping database insertion to prove the GiST constraint rejects it. AI, Channel3 and PayPal use explicit **test-only** mocks in automated tests; production never returns fake successful provider results.
 
-## Safety and scope
+Live integration keys, PayPal buyer redirects, local/deployed browser screenshots and accessibility checks are deferred to the final manual QA pass. See [Manual QA checklist](docs/MANUAL_QA.md).
 
-Quotes are **draft price snapshots**, not verified local shipping costs, investments, escrow, binding group commitments, actual savings, or payment requests. Participants in a quote are derived from compatible opted-in *potential* members and have **not accepted or funded anything**. Hypothetical savings assume each person otherwise would have bought the exact same product. Offers, availability, taxes, shipping, ownership agreements and costs must be rechecked before any real payment. Stage 4 implements PayPal Sandbox only; real-money payments are not enabled.
-
-[MIT License](LICENSE).
+[Architecture](docs/ARCHITECTURE.md) · [API contracts](docs/INTEGRATION_CONTRACTS.md) · [Roadmap](docs/ROADMAP.md) · [MIT project license](LICENSE).
