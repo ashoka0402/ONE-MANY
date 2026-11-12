@@ -95,6 +95,7 @@ export function Workspace() {
   const [authBusy, setAuthBusy] = useState(false);
   const [needBusy, setNeedBusy] = useState(false);
   const [loadingNeeds, setLoadingNeeds] = useState(false);
+  const [demoBusy, setDemoBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [needs, setNeeds] = useState<Need[]>([]);
@@ -121,6 +122,28 @@ export function Workspace() {
       setLoadingNeeds(false);
     }
   }, []);
+
+  async function loadDemoExamples() {
+    if (!token) return;
+    setDemoBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const result = await api<{
+        created_needs: number;
+        created_sample_neighbors: number;
+        message: string;
+      }>("/demo/seed", token, { method: "POST" });
+      await refreshNeeds(token);
+      setNotice(result.created_needs > 0
+        ? `Loaded ${result.created_needs} fictional needs and matching examples. No payments were created.`
+        : "Demo examples are already loaded. No duplicates created.");
+    } catch (err) {
+      setError(messageFrom(err));
+    } finally {
+      setDemoBusy(false);
+    }
+  }
 
   async function handleAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -325,6 +348,18 @@ export function Workspace() {
             <div><p className="eyebrow"><span className="status-dot" /> THE FIRST STEP</p><h1>What&apos;s on your<br /><em>mind today?</em></h1><p>Describe what you need. AI can identify reusable items, then find possible shared ownership opportunities with your consent.</p></div>
             <div className="work-count"><strong>{openCount}</strong><span>OPEN NEEDS</span></div>
           </section>
+          {process.env.NODE_ENV !== "production" && (
+            <section className="work-demo-banner" aria-label="Fictional demo data">
+              <div>
+                <strong>Explore with example data</strong>
+                <p>Load four sample needs and anonymous fictional matches to see how shared discovery works. No real neighbors, products or payments.</p>
+              </div>
+              <button type="button" onClick={() => void loadDemoExamples()} disabled={demoBusy || loadingNeeds}>
+                {demoBusy ? <LoaderCircle size={15} className="work-spinner" /> : <Sparkles size={15} />}
+                {demoBusy ? "Loading examples..." : "Load demo data"}
+              </button>
+            </section>
+          )}
           {error && <p className="work-error" role="alert">{error}</p>}
           {notice && <p className="work-notice" role="status"><Check size={16} /> {notice}</p>}
           <div className="work-content">
@@ -367,7 +402,9 @@ export function Workspace() {
                       <div className="work-need-analysis">
                         {need.intent ? (
                           <div className="work-intent-card">
-                            <div className="work-intent-label"><Sparkles size={13} /> GEMINI EXTRACTED · {need.intent.model_name}</div>
+                            <div className="work-intent-label"><Sparkles size={13} /> {need.intent.model_name === "demo-fixture"
+                              ? "SAMPLE CLASSIFICATION · NOT AI-GENERATED"
+                              : `GEMINI EXTRACTED · ${need.intent.model_name}`}</div>
                             <strong>{need.intent.asset_type}</strong>
                             <p>{need.intent.purpose}</p>
                             {need.intent.required_features.length > 0 && <small>Required: {need.intent.required_features.join(", ")}</small>}
