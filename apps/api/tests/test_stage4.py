@@ -82,7 +82,7 @@ def account(client, name):
     response = client.post(
         "/api/v1/auth/register",
         json={
-            "email": name + "@example.test",
+            "email": name + "@example.com",
             "display_name": "Stage Four Member",
             "password": "long-and-unique-test-password",
         },
