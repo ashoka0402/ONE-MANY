@@ -305,3 +305,12 @@
 @media (prefers-reduced-motion:reduce) { .ledger-progress-rail>div { transition:none; } }
 @media (max-width:930px) { .ledger-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:620px) { .ledger-panel { padding:18px; } .ledger-head,.ledger-detail-heading { flex-direction:column; } .ledger-metrics { grid-template-columns:1fr 1fr; } .ledger-metrics strong { font-size:17px; } .ledger-details { padding:14px; } .ledger-grid-header { align-items:flex-start; flex-direction:column; } .ledger-head h2 { font-size:24px; } }
+
+/* Explicit, optional development-only fictional onboarding data. */
+.work-demo-banner { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:18px 22px; margin:20px 0; border:1px solid #c8dcb9; border-radius:12px; background:#f1f7e9; }
+.work-demo-banner strong { color:#223323; font-size:14px; }
+.work-demo-banner p { margin:7px 0 0; max-width:570px; color:#506147; font-size:12px; line-height:1.55; }
+.work-demo-banner button { display:inline-flex; flex-shrink:0; align-items:center; justify-content:center; gap:8px; padding:12px 16px; border:0; border-radius:8px; background:#192a20; color:#f4ffe9; font-size:12px; font-weight:700; cursor:pointer; }
+.work-demo-banner button:disabled { opacity:.55; cursor:not-allowed; }
+.work-demo-banner button:focus-visible { outline:3px solid #92c26f; outline-offset:3px; }
+@media (max-width: 650px) { .work-demo-banner { flex-direction:column; align-items:stretch; } .work-demo-banner button { width:100%; } }
