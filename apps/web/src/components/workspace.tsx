@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useState } from "react";
 import Link from "next/link";
 import { CatalogPanel, ProposalHistory } from "@/components/catalog-panel";
 import { FundingPanel } from "@/components/funding-panel";
+import { ReservationPanel } from "@/components/reservation-panel";
 import {
   ArrowLeft,
   ArrowRight,
@@ -309,13 +310,13 @@ export function Workspace() {
           <a href="#needs" className="active"><Lightbulb size={18} /> Your needs</a>
           <a href="#next"><Users size={18} /> Shared groups</a>
           <a href="#funding"><CreditCard size={18} /> Contributions</a>
-          <a href="#next"><CalendarDays size={18} /> Scheduling</a>
+          <a href="#scheduling"><CalendarDays size={18} /> Scheduling</a>
         </nav>
         <div className="work-sidebar-profile"><div className="work-avatar">{user.display_name.slice(0, 1).toUpperCase()}</div><div><strong>{user.display_name}</strong><span>{user.email}</span></div></div>
         <button className="work-logout" type="button" onClick={signOut}><LogOut size={16} /> Sign out</button>
       </aside>
       <div className="app-main">
-        <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">STAGE 4 · PAYPAL SANDBOX</span></header>
+        <header className="app-topbar"><span>Workspace / <strong>Your needs</strong></span><span className="outline-label">STAGE 5 · SHARED RESERVATIONS</span></header>
         <main id="main" className="work-main">
           <section className="work-intro">
             <div><p className="eyebrow"><span className="status-dot" /> THE FIRST STEP</p><h1>What&apos;s on your<br /><em>mind today?</em></h1><p>Describe what you need. AI can identify reusable items, then find possible shared ownership opportunities with your consent.</p></div>
@@ -427,8 +428,9 @@ export function Workspace() {
           </div>
           <ProposalHistory token={token} />
           <FundingPanel token={token} needs={needs} />
+          <ReservationPanel token={token} />
           <section id="next" className="work-next">
-            <div><span className="work-kicker">STAGE 4 · VERIFIED DEMO CHECKOUT</span><h2>Discovery becomes explicit participation.</h2><p>Compatible people can now join a funding group, approve their own Sandbox contribution, and verify captured amounts through PayPal. Physical purchases, fulfillment and scheduling remain separate future steps.</p></div>
+            <div><span className="work-kicker">STAGE 4 · VERIFIED DEMO CHECKOUT</span><h2>Discovery becomes explicit participation.</h2><p>Compatible people can now join a funding group, approve their own Sandbox contribution, and verify captured amounts through PayPal. Bryntum now visualizes persisted, conflict-checked member calendars after funding verification. Physical purchase and handover still remain separate.</p></div>
             <div className="work-next-icon" aria-hidden="true"><Users size={35} /></div>
           </section>
         </main>

@@ -200,3 +200,53 @@
 .funding-success { color:#2b6d29!important; display:flex; align-items:center; gap:9px; font-weight:650; }
 @media(max-width:860px) { .funding-columns { grid-template-columns:1fr; } .funding-heading { flex-direction:column; } }
 @media(max-width:530px) { .funding-panel { padding:19px; } .funding-group-title { flex-direction:column; } .funding-group-title>strong small { text-align:left; } .funding-heading h2 { font-size:24px; } }
+
+
+/* Stage 5 — Bryntum Community resource scheduler and accessible booking controls. */
+.reservation-section { background:#fffefa; border:1px solid #dbe6d2; border-radius:15px; padding:31px; margin-top:26px; display:flex; flex-direction:column; gap:17px; }
+.reservation-head { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }
+.reservation-head h2 { font-size:28px; letter-spacing:-.9px; line-height:1.2; font-weight:600; color:#223523; margin:9px 0; }
+.reservation-head p { color:#6b7e65; font-size:12px; line-height:1.65; }
+.reservation-outline { color:#31582c; background:#edf5e8; border:1px solid #d2e4c9; padding:10px 13px; border-radius:8px; font-size:11px; font-weight:650; cursor:pointer; display:inline-flex; gap:8px; align-items:center; justify-content:center; flex-shrink:0; }
+.reservation-outline:hover:not(:disabled) { background:#deebd4; }
+.reservation-outline:disabled { opacity:.48; cursor:not-allowed; }
+.reservation-terms { display:flex; gap:11px; align-items:flex-start; padding:13px 15px; border-radius:9px; background:#f0f6e9; color:#4c6944; border:1px solid #d9e9cd; }
+.reservation-terms svg { flex-shrink:0; margin-top:2px; }
+.reservation-terms p { font-size:11px; line-height:1.65; }
+.reservation-empty { padding:34px 18px; background:linear-gradient(140deg,#f5faef,#fdfefb); border:1px dashed #d4e4c9; border-radius:11px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:9px; }
+.reservation-empty svg { color:#73935f; }
+.reservation-empty strong { color:#354d30; font-size:15px; }
+.reservation-empty p { color:#789070; font-size:11px; line-height:1.6; }
+.reservation-group-picker { display:flex; flex-wrap:wrap; gap:9px; }
+.reservation-group-picker button { background:#f7faf3; border:1px solid #dce6d3; border-radius:9px; padding:11px 13px; text-align:left; display:flex; flex-direction:column; gap:5px; min-width:165px; max-width:280px; cursor:pointer; }
+.reservation-group-picker button:hover:not(:disabled),.reservation-group-picker button.is-selected { border-color:#7fac64; background:#e9f4dd; }
+.reservation-group-picker button:disabled { opacity:.5; cursor:not-allowed; }
+.reservation-group-picker button span { font-size:11px; font-weight:650; color:#304b29; line-height:1.4; }
+.reservation-group-picker button small { color:#71876a; font-size:10px; text-transform:capitalize; }
+.reservation-board { border:1px solid #dfe8d9; border-radius:12px; padding:20px; background:white; display:flex; flex-direction:column; gap:16px; }
+.reservation-board-heading { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; }
+.reservation-board-heading h3 { font-size:20px; font-weight:650; color:#2c4529; margin:8px 0; line-height:1.3; }
+.reservation-board-heading p { color:#6d8067; font-size:11px; }
+.reservation-calendar-caption { display:flex; gap:9px; align-items:center; color:#47743a; font-weight:650; font-size:10px; letter-spacing:.2px; }
+.reservation-bryntum-host { width:100%; height:310px; min-height:310px; overflow:hidden; border-radius:10px; border:1px solid #d9e5d2; }
+.reservation-timeline-loading { height:310px; display:grid; place-items:center; border:1px dashed #d6e4cc; border-radius:10px; background:#f7faf3; color:#6e8668; font-size:12px; }
+.reservation-no-events { font-size:11px; color:#809174; background:#f6f8f3; padding:10px 13px; border-radius:8px; }
+.reservation-form { display:flex; flex-direction:column; gap:13px; border-top:1px solid #e4ebdf; padding-top:20px; }
+.reservation-form h4 { display:flex; gap:8px; align-items:center; font-size:15px; color:#254324; font-weight:650; }
+.reservation-form p { color:#718269; font-size:11px; line-height:1.55; margin-top:7px; }
+.reservation-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.reservation-fields label { display:flex; flex-direction:column; gap:6px; color:#556e4d; font-size:11px; font-weight:650; }
+.reservation-fields input { min-width:0; border:1px solid #d4e2cc; background:#fafcf8; color:#304d2a; border-radius:8px; padding:11px; font-size:12px; }
+.reservation-fields input:focus-visible { outline:2px solid #91c772; outline-offset:2px; }
+.reservation-fields input:disabled { opacity:.6; }
+.reservation-buttons { display:flex; flex-wrap:wrap; gap:9px; }
+.reservation-buttons button { border-radius:8px; padding:11px 14px; display:inline-flex; gap:7px; align-items:center; font-weight:650; font-size:11px; cursor:pointer; }
+.reservation-buttons button:disabled { opacity:.45; cursor:not-allowed; }
+.reservation-primary { border:1px solid #9fd96a; color:#1c331b; background:#b8f26a; }
+.reservation-primary:hover:not(:disabled) { background:#a9e85e; }
+.reservation-danger { background:#fff2ef; border:1px solid #ebd2c8; color:#a05342; }
+.reservation-danger:hover:not(:disabled) { background:#ffe7df; }
+.reservation-locked { padding:11px 13px; background:#fff4e8; border:1px solid #edddc9; border-radius:7px; color:#93652c!important; }
+.reservation-notice { color:#78866f; border-top:1px solid #e8ede5; padding-top:13px; font-size:10px; line-height:1.65; }
+@media(max-width:800px) { .reservation-head,.reservation-board-heading { flex-direction:column; align-items:stretch; } .reservation-section { padding:19px; } }
+@media(max-width:540px) { .reservation-fields { grid-template-columns:1fr; } .reservation-board { padding:13px; } .reservation-head h2 { font-size:24px; } }

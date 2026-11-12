@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import "@bryntum/scheduler-community/scheduler.css";
+import "@bryntum/scheduler-community/svalbard-light.css";
 import "./globals.css";
 import "./brand.css";
 import { Geist } from "next/font/google";
