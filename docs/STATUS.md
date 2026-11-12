@@ -1,6 +1,6 @@
 # Stage 6 — AG Grid Community verified Sandbox contribution ledger
 
-Status: **Implemented in source, automated verification pending final CI**. Live provider credentials and browser-level QA remain deferred.
+Status: **Stage 6 complete at the automated build/test level**. Live provider credentials and browser-level QA remain deferred.
 
 ## Implemented
 
@@ -18,4 +18,4 @@ This is a **PayPal Sandbox test-merchant** ledger, not real money, escrow, bank 
 
 ## Automated and manual checks
 
-The Stage 6 CI run verifies React build, Python tests, Ruff, a live PostgreSQL migration and owner-scoped ledger smoke. Browser-level visual inspection and live PayPal/Gemini/Channel3 credential verification remain on the final manual checklist.
+Stage 6's integration run [43167136166](https://github.com/ashoka0402/ONE-MANY/actions/runs/43167136166) passed React lint/typecheck and production build, Alembic revision `20261112_06`, a PostgreSQL-backed member-only ledger smoke and **50 backend tests**, but initially failed Ruff import order. The import has been fixed, the temporary npm lockfile step removed, and the permanent workflow now uses read-only permissions. Final verification is the subsequent clean CI run. Browser-level inspection and live PayPal/Gemini/Channel3 credential tests remain on the manual checklist.
