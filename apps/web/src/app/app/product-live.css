@@ -1,0 +1,71 @@
+/* Product-stage navigation and quieter live workspace.
+   The reference provides palette and texture; UI is organized by real tasks. */
+.app-layout .app-sidebar{width:245px}
+.app-layout .workspace-label{margin:39px 8px 13px;font-size:9px;letter-spacing:1.45px}
+.app-layout .work-step-navigation{display:grid;gap:6px}
+.app-layout .work-step-navigation button{width:100%;display:flex;align-items:center;gap:11px;min-height:49px;text-align:left;background:transparent;border:1px solid transparent;border-radius:12px;padding:9px 10px;color:#b0c5b3;font-size:12px;font-weight:710;cursor:pointer;transition:background .16s,border-color .16s}
+.app-layout .work-step-navigation button>span:nth-child(2){flex:1;white-space:nowrap}
+.app-layout .work-step-navigation button svg{opacity:.52}
+.app-layout .work-step-navigation button:hover:not(.is-active){background:rgba(105,183,116,.11);color:#effbf0}
+.app-layout .work-step-navigation button.is-active{background:#8ce8b6;color:#102d1b;border-color:#a9fbd0}
+.app-layout .work-step-navigation button.is-active svg{opacity:1}
+.app-layout .work-nav-number{width:29px;height:28px;flex-shrink:0;display:grid;place-items:center;border-radius:8px;border:1px solid #4d6c52;background:rgba(36,79,48,.36);font-size:10px;color:#91c5a0;font-weight:800}
+.app-layout .work-step-navigation button.is-active .work-nav-number{background:#b6f4d1;border-color:#75c497;color:#183a26}
+.app-layout .work-tour-link{margin-top:21px;margin-bottom:18px;justify-content:space-between;padding:13px 12px;border-radius:12px;background:#1a3c29;border-color:#3e7050;line-height:1.4}
+.app-layout .work-sidebar-profile{margin-top:auto}
+.app-layout .work-main{max-width:1230px;padding-top:49px}
+.app-layout .work-intro{align-items:flex-start}
+.app-layout .work-intro h1{font-size:clamp(40px,4.2vw,62px);font-weight:560}
+.app-layout .work-intro p:not(.eyebrow){max-width:660px;line-height:1.75}
+.app-layout .work-ai-instruction{max-width:100%;margin-bottom:22px;padding:16px 18px;background:rgba(37,86,47,.23);border:1px solid #3c6647}
+.app-layout .work-ai-instruction p{line-height:1.7}
+.app-layout .work-demo-banner{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:19px 20px;margin:29px 0 15px;background:linear-gradient(110deg,#21432b,#10291b);border:1px solid #3d694a;border-radius:14px}
+.app-layout .work-demo-banner strong{font-size:13px}
+.app-layout .work-demo-banner p{font-size:11px;color:#a5c9ae;margin-top:6px;line-height:1.6}
+.app-layout .work-demo-banner button{display:inline-flex;gap:8px;align-items:center;justify-content:center;padding:12px 15px;background:#91eebc;color:#122f1d;border:1px solid #adfbd1;border-radius:10px;font-size:11px;font-weight:800;white-space:nowrap;flex-shrink:0}
+.app-layout .work-seed-note{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 23px;color:#8eae98;font-size:11px;flex-wrap:wrap}
+.app-layout .work-seed-note button{display:inline-flex;align-items:center;gap:7px;background:none;border:0;color:#9cebb8;font-size:11px;font-weight:750}
+.app-layout .work-content{gap:17px}
+.app-layout .work-create-card,.app-layout .work-list-card{border-radius:17px;min-width:0;background:linear-gradient(135deg,#1b3626,#0e1e14 68%);border:1px solid #365641}
+.app-layout .work-card-title{border-color:#3e6047}
+.app-layout .work-stage-section{padding:12px 0 60px}
+.app-layout .work-stage-section>.catalog-history,.app-layout .work-stage-section>.funding-panel,.app-layout .work-stage-section>.ledger-panel,.app-layout .work-stage-section>.reservation-section{margin-top:0;scroll-margin-top:92px}
+.app-layout .work-stage-section .catalog-history,.app-layout .work-stage-section .funding-panel,.app-layout .work-stage-section .ledger-panel,.app-layout .work-stage-section .reservation-section{padding:26px;border-radius:18px}
+.app-layout .work-stage-section .catalog-history-top,.app-layout .work-stage-section .funding-heading,.app-layout .work-stage-section .ledger-head,.app-layout .work-stage-section .reservation-head{gap:14px;align-items:flex-start}
+.app-layout .work-stage-section h2{font-size:clamp(27px,3.2vw,39px);font-weight:620;letter-spacing:-1.25px;line-height:1.13}
+.app-layout .work-stage-section p{line-height:1.7}
+.app-layout .work-stage-section .funding-warning,.app-layout .work-stage-section .ledger-terms,.app-layout .work-stage-section .reservation-terms{font-size:11px;line-height:1.8;border-radius:11px}
+.app-layout .work-stage-section .funding-group-list,.app-layout .work-stage-section .ledger-details,.app-layout .work-stage-section .reservation-board{border-radius:14px}
+.app-layout .work-stage-section .ledger-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.app-layout .work-stage-section .ledger-metrics article{padding:13px;min-width:0}
+.app-layout .work-stage-section .ledger-metrics strong{font-size:20px;overflow-wrap:anywhere}
+.app-layout .work-stage-section .funding-columns{gap:13px}
+.app-layout .work-stage-section .reservation-calendar-caption{font-size:11px}
+.app-layout .work-stage-section .ledger-grid-header{flex-wrap:wrap;gap:8px}
+.app-layout .work-stage-section .ledger-grid-header span{color:#93b09d}
+@media(max-width:1150px){
+ .app-layout .app-sidebar{width:220px}
+ .app-layout .work-step-navigation button{padding:8px 7px;font-size:11px}
+ .app-layout .work-content{grid-template-columns:1fr}
+ .app-layout .work-stage-section .ledger-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+ .app-layout .app-sidebar{width:100%;position:relative;min-height:0}
+ .app-layout .work-step-navigation{display:flex;gap:5px;overflow:auto;margin-top:10px;padding-bottom:7px}
+ .app-layout .work-step-navigation button{min-width:max-content;width:auto;flex-shrink:0;min-height:41px}
+ .app-layout .work-step-navigation button svg{display:none}
+ .app-layout .work-tour-link{margin:12px 0}
+ .app-layout .work-main{padding:32px 20px 65px}
+ .app-layout .work-stage-section{padding:5px 0 45px}
+ .app-layout .work-stage-section>.catalog-history,.app-layout .work-stage-section>.funding-panel,.app-layout .work-stage-section>.ledger-panel,.app-layout .work-stage-section>.reservation-section{padding:18px}
+ .app-layout .work-demo-banner{align-items:stretch;flex-direction:column}
+ .app-layout .work-demo-banner button{white-space:normal}
+}
+@media(max-width:480px){
+ .app-layout .work-main{padding:27px 16px 50px}
+ .app-layout .work-stage-section .ledger-metrics{grid-template-columns:1fr 1fr}
+ .app-layout .work-stage-section .ledger-metrics strong{font-size:18px}
+}
+@media(prefers-reduced-motion:reduce){
+ .app-layout .work-step-navigation button{transition:none}
+}
