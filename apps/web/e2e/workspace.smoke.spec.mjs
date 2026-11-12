@@ -40,45 +40,57 @@ test("real browser: registration, persisted need, and memory-only logout", async
 });
 
 
-test("dark demo: five navigable sections, interactive preview, and real-mode escape", async ({ page }) => {
+
+test("product prototype: quotes, funding simulation, AG Grid, Bryntum, and animated handoff", async ({ page }) => {
   const suffix = Date.now().toString(36);
   await page.goto("/app");
-  await page.getByLabel("Display name").fill("Demo Tester");
-  await page.getByLabel("Email address").fill("demo-preview-" + suffix + "@example.com");
-  await page.getByLabel("Password").fill("demo-preview-password-not-real");
+  await page.getByLabel("Display name").fill("Prototype Member");
+  await page.getByLabel("Email address").fill("prototype-" + suffix + "@example.com");
+  await page.getByLabel("Password").fill("prototype-only-test-password");
   await page.locator("form.work-form").getByRole("button", { name: "Create account" }).click();
-  // The deployed build opens the real workspace first. Wait for sign-up
-  // navigation to finish before locating the optional preview action.
+
   await expect(page.getByRole("heading", { name: "Add a new need" })).toBeVisible();
-  await page.getByRole("button", { name: /Explore dark demo/i }).click();
-  await expect(page.getByRole("heading", { name: /Good to see you/i })).toBeVisible();
-  await expect(page.getByText("FICTIONAL DEMO").first()).toBeVisible();
+  await page.getByRole("button", { name: /Explore complete prototype/ }).click();
 
-  await page.getByRole("button", { name: "Flip card for details" }).click();
-  await expect(page.getByText("Example equal share")).toBeVisible();
-  await page.getByRole("button", { name: "Next need" }).click();
-  await expect(page.getByText("Outdoor movie night", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Understand the need." })).toBeVisible();
+  await expect(page.getByText("DEMO · NOT REAL PAYMENTS")).toBeVisible();
+  await page.getByRole("button", { name: "Sample extraction" }).first().click();
+  await expect(page.getByText(/Sample classification · not a Gemini response/)).toBeVisible();
 
-  await page.getByRole("button", { name: /Your needs/ }).click();
-  await expect(page.getByText("PREWRITTEN CLASSIFICATION").first()).toBeVisible();
-  await page.getByRole("button", { name: /Match ready only/ }).click();
-  await expect(page.getByText("Weekend pressure washer")).toBeVisible();
+  const navigation = page.getByRole("navigation", { name: "Prototype navigation" });
+  await navigation.getByRole("button", { name: /Draft quotes/ }).click();
+  await expect(page.getByRole("heading", { name: "Saved draft quotes" })).toBeVisible();
+  await page.locator(".pd-quote").filter({ hasText: "Portable projector" }).click();
+  await expect(page.getByText("$120.00 each for 3")).toBeVisible();
 
-  await page.getByRole("button", { name: /Shared groups/ }).click();
-  await expect(page.getByText("The clean-up crew")).toBeVisible();
-  await page.getByRole("navigation", { name: "Demo navigation" }).getByRole("button", { name: "Contributions" }).click();
-  await expect(page.getByText("67% scenario complete")).toBeVisible();
+  await navigation.getByRole("button", { name: /Group funding/ }).click();
+  await expect(page.getByRole("heading", { name: "Fund a shared possibility." })).toBeVisible();
+  await page.getByRole("button", { name: /Simulate approval/ }).click();
+  await page.getByRole("button", { name: /Simulate capture/ }).click();
+  await expect(page.locator(".pd-funding-summary")).toContainText("$240.00");
 
-  await page.getByRole("button", { name: /Contribution ledger/ }).click();
-  await expect(page.getByText("DEMO-1048")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Export demo CSV/ })).toBeVisible();
+  await navigation.getByRole("button", { name: /Contribution ledger/ }).click();
+  await expect(page.getByRole("heading", { name: "Every contribution. Accounted for." })).toBeVisible();
+  await expect(page.getByText("Fictional participant contributions")).toBeVisible();
+  await expect(page.getByText("Fictional event history")).toBeVisible();
 
-  await page.getByRole("button", { name: /Scheduling/ }).click();
-  await expect(page.getByText("3 sample bookings")).toBeVisible();
-  await page.getByRole("button", { name: "Sat 21" }).click();
-  await expect(page.getByText("Portable projector", { exact: true })).toBeVisible();
+  await navigation.getByRole("button", { name: /Scheduling/ }).click();
+  await expect(page.getByRole("heading", { name: "One asset. Everyone's turn." })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Shared asset booking timeline" })).toBeVisible();
+  await page.getByRole("button", { name: /Replay handoff/ }).click();
+  await expect(page.getByText("From my turn to yours.")).toBeVisible();
+  await page.screenshot({ path: "test-results/product-handoff-schedule.png", fullPage: true });
 
-  await page.screenshot({ path: "test-results/emerald-demo-workspace.png", fullPage: true });
-  await page.getByRole("button", { name: /Live workspace/ }).last().click();
+  await page.getByRole("button", { name: /Open live workspace/ }).click();
   await expect(page.getByRole("heading", { name: "Add a new need" })).toBeVisible();
+
+  const liveNav = page.getByRole("navigation", { name: "Workspace navigation" });
+  await liveNav.getByRole("button", { name: /Draft quotes/ }).click();
+  await expect(page.getByRole("heading", { name: "Saved draft quotes" })).toBeVisible();
+  await liveNav.getByRole("button", { name: /Group funding/ }).click();
+  await expect(page.getByRole("heading", { name: "Fund a shared possibility." })).toBeVisible();
+  await liveNav.getByRole("button", { name: /Contribution ledger/ }).click();
+  await expect(page.getByRole("heading", { name: "Every contribution. Accounted for." })).toBeVisible();
+  await liveNav.getByRole("button", { name: /Shared scheduling/ }).click();
+  await expect(page.getByRole("heading", { name: "One asset. Everyone's turn." })).toBeVisible();
 });
