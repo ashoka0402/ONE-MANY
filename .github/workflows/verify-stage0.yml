@@ -155,6 +155,38 @@ jobs:
               assert draft.json()["price_minor"] == 9701
               assert client.get("/api/v1/proposals", headers=auth).json()["proposals"][0]["id"] == draft.json()["id"]
               assert client.get("/api/v1/proposals", headers=peer_auth).json()["proposals"] == []
+              # Stage 4 uses PostgreSQL for real persistence; provider is test-only fixture.
+              from one_many_api.paypal import PayPalSandboxClient
+              with patch("one_many_api.funding_routes.Channel3Client.product") as detail:
+                  detail.return_value = normalize_product(raw_product, "USD", [], [])
+                  opened = client.post(
+                      "/api/v1/proposals/" + draft.json()["id"] + "/funding-group", headers=auth
+                  )
+              assert opened.status_code == 201, opened.text
+              gid = opened.json()["group"]["id"]
+              assert opened.json()["group"]["state"] == "recruiting"
+              joined = client.post("/api/v1/funding/join", headers=peer_auth, json={
+                  "invite_code": opened.json()["invite_code"],
+                  "need_id": peer_need.json()["id"],
+              })
+              assert joined.status_code == 200, joined.text
+              assert joined.json()["state"] == "funding"
+              with patch("one_many_api.funding_routes.Channel3Client.product") as detail:
+                  detail.return_value = normalize_product(raw_product, "USD", [], [])
+                  with patch.object(PayPalSandboxClient, "create_order") as checkout:
+                      checkout.return_value = (
+                          "CISANDBOXORDER12345",
+                          "https://www.sandbox.paypal.com/checkoutnow?token=CISANDBOXORDER12345",
+                      )
+                      order = client.post(
+                          "/api/v1/funding/groups/" + gid + "/paypal-order", headers=auth
+                      )
+              assert order.status_code == 200, order.text
+              assert order.json()["amount_minor"] == 4851
+              ledger = client.get("/api/v1/funding/groups/" + gid, headers=auth)
+              assert ledger.status_code == 200, ledger.text
+              assert ledger.json()["captured_minor"] == 0
+              assert ledger.json()["members"][0]["payment_state"] == "awaiting_approval"
 
           PY
       - name: API tests and lint
