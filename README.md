@@ -22,7 +22,7 @@ ONE / MANY is an AI-assisted shared-asset purchasing and scheduling prototype. P
 ## Stage 7: run, verify and submit
 
 - **[Deployment guide](docs/DEPLOYMENT.md)** — Render API and Postgres Blueprint (paid API tier, costs reviewed before Apply) + Vercel frontend; exact public environment variables and a read-only hosted smoke check.
-- **[Chromium browser test](apps/web/e2e/)** — real account registration, persisted need, logout-by-refresh and re-login; isolated from real provider credentials.
+- **[Chromium browser test](apps/web/e2e/)** — real account registration, persisted need, logout-by-refresh and re-login; isolated from real provider credentials. [Stage 7 CI run 43170611672](https://github.com/ashoka0402/ONE-MANY/actions/runs/43170611672) passed **53 backend tests** and the Chromium smoke, with screenshot evidence in its artifact.
 - **[Manual provider QA](docs/MANUAL_QA.md)** — genuinely verify Gemini, Channel3, PayPal Sandbox, AG Grid and Bryntum; automated mocks cannot replace this.
 - **[Flute demonstration storyboard](docs/DEMO_VIDEO.md)** — cinematic real-UI opening + actual browser capture footage; no video has been generated or uploaded merely by committing this plan.
 - **[Devpost submission copy](docs/DEVPOST_SUBMISSION.md)** — project description and mandatory links checklist; no submission has been made by this repository.

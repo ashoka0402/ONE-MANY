@@ -1,6 +1,6 @@
 # Stage 7 — Deployment and submission handoff
 
-Status: **Implementation and documentation committed; final CI/browser verification in progress. Real hosting, live provider QA, MP4/YouTube upload and Devpost submission are not yet completed.**
+Status: **Stage 7 code, deployment plan and automated verification complete**. Real hosting, live provider QA, MP4/YouTube upload and Devpost submission remain **not completed**.
 
 ## Source changes
 
@@ -10,6 +10,10 @@ Status: **Implementation and documentation committed; final CI/browser verificat
 - Browser reservation CORS preflight corrected to include HTTP PUT; API and Next.js security headers added; authenticated workspace set to `noindex`.
 - Independent, pinned Playwright Chromium suite: registration, real database need, opt-in, reload logout, and re-login. Runs from `apps/web/e2e` and may save screenshots as CI evidence.
 - Read-only deployment verifier script, honest deployment instructions, actual Flute process/scene storyboard and a copy-ready Devpost submission draft, without invented URLs or claims.
+
+## Automated CI verification — passed
+
+[GitHub Actions run 43170611672](https://github.com/ashoka0402/ONE-MANY/actions/runs/43170611672) is green with **53 backend tests**, Ruff lint, Next.js ESLint/TypeScript/production build, PostgreSQL migrations, real PostgreSQL smoke, Compose validation, and one real Chromium browser test. The Chromium test successfully registered a fresh test account, saved a need, reloaded to lose its memory-only token and reauthenticated to retrieve the persisted need. Screenshots were uploaded in the workflow artifact `one-many-stage7-browser-evidence`; they are browser-generated evidence, not a Flute/Devpost video.
 
 ## Not verified or not executed
 

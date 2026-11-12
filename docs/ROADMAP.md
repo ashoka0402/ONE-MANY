@@ -1,6 +1,6 @@
 # Roadmap
 
-Current stage: **7 — Deployment, Chromium e2e, security hardening, Flute video and Devpost handoff** (in progress). This is the final planned stage; external deployment, video upload and submission remain manual. Hackathon deadline: **November 13, 2026 at 01:30 IST**.
+Current stage: **7 — final stage**. Deployment configuration, browser e2e, API hardening and submission materials are committed and CI-verified. **Live hosting, provider credential verification, public YouTube video, and final Devpost submission remain user/account-authorized manual actions.** No later development stage is planned. Hackathon deadline: **November 13, 2026 at 01:30 IST**.
 
 | Stage | Scope | Acceptance criteria |
 | --- | --- | --- |
