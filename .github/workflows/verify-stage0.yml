@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   checks:
@@ -14,12 +14,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
+      - name: One-time Stage 6 AG Grid Community lockfile resolution
+        run: |
+          npm install --prefix apps/web --package-lock-only --ignore-scripts --no-audit --no-fund
+          if ! git diff --quiet -- apps/web/package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add apps/web/package-lock.json
+            git commit -m "chore(stage-6): lock AG Grid Community npm dependencies"
+            git push origin HEAD:main
+          fi
       - name: Install frontend
         run: npm ci --prefix apps/web --no-audit --no-fund
       - name: Frontend lint and types
@@ -33,7 +43,7 @@ jobs:
           python-version: "3.13"
       - name: Install API
         run: python -m pip install -e "./apps/api[dev]"
-      - name: Start PostgreSQL and apply Stage 5 migrations
+      - name: Start PostgreSQL and apply Stage 6 migrations
         env:
           POSTGRES_PASSWORD: validation-only-not-real
           DATABASE_URL: postgresql+psycopg://one_many:validation-only-not-real@127.0.0.1:5432/one_many
@@ -47,12 +57,18 @@ jobs:
           with psycopg.connect("postgresql://one_many:validation-only-not-real@127.0.0.1:5432/one_many") as connection:
               assert connection.execute("SELECT to_regclass('public.users')").fetchone()[0] == "users"
               assert connection.execute("SELECT to_regclass('public.needs')").fetchone()[0] == "needs"
-              assert connection.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "20261112_05"
+              assert connection.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "20261112_06"
               assert connection.execute("SELECT to_regclass('public.need_intents')").fetchone()[0] == "need_intents"
               assert connection.execute("SELECT to_regclass('public.purchase_proposals')").fetchone()[0] == "purchase_proposals"
               for table in ("funding_groups", "funding_members", "payment_attempts", "paypal_webhook_events"):
                   assert connection.execute("SELECT to_regclass(%s)", (f"public.{table}",)).fetchone()[0] == table
               assert connection.execute("SELECT to_regclass('public.asset_reservations')").fetchone()[0] == "asset_reservations"
+              assert connection.execute(
+                  "SELECT to_regclass('public.funding_ledger_events')"
+              ).fetchone()[0] == "funding_ledger_events"
+              assert connection.execute(
+                  "SELECT to_regclass('public.ix_funding_events_group_recorded')"
+              ).fetchone()[0] == "ix_funding_events_group_recorded"
               assert connection.execute(
                   "SELECT 1 FROM pg_constraint WHERE conname = 'ex_reservations_no_overlap'"
               ).fetchone()[0] == 1
@@ -250,6 +266,30 @@ jobs:
                       db.rollback()
                   else:
                       raise AssertionError("PostgreSQL must reject overlapping reservations")
+              # Stage 6: read the REAL PostgreSQL ledger snapshot from earlier
+              # joined/recorded test funding, not fabricated application data.
+              ledger = client.get(
+                  "/api/v1/funding/groups/" + gid + "/ledger", headers=peer_auth
+              )
+              assert ledger.status_code == 200, ledger.text
+              snapshot = ledger.json()
+              assert snapshot["captured_minor"] == 9701
+              assert snapshot["outstanding_minor"] == 0
+              assert snapshot["total_minor"] == 9701
+              assert snapshot["verified_members"] == 2
+              assert snapshot["reconciliation"] == "reconciled"
+              assert [row["slot"] for row in snapshot["members"]] == [1, 2]
+              assert len(snapshot["events"]) >= 3
+              assert {item["event_type"] for item in snapshot["events"]} >= {
+                  "group_created", "member_joined", "order_created",
+              }
+              assert "paypal_capture_id" not in ledger.text
+              assert "paypal_order_id" not in ledger.text
+              assert client.get(
+                  "/api/v1/funding/groups/" + gid + "/ledger", headers={
+                      "Authorization": "Bearer invalid",
+                  },
+              ).status_code == 401
               engine.dispose()
 
 

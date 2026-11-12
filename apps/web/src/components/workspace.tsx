@@ -5,12 +5,14 @@ import Link from "next/link";
 import { CatalogPanel, ProposalHistory } from "@/components/catalog-panel";
 import { FundingPanel } from "@/components/funding-panel";
 import { ReservationPanel } from "@/components/reservation-panel";
+import { LedgerPanel } from "@/components/ledger-panel";
 import {
   ArrowLeft,
   ArrowRight,
   CalendarDays,
   Check,
   CreditCard,
+  ReceiptText,
   Lightbulb,
   LoaderCircle,
   LogOut,
@@ -310,6 +312,7 @@ export function Workspace() {
           <a href="#needs" className="active"><Lightbulb size={18} /> Your needs</a>
           <a href="#next"><Users size={18} /> Shared groups</a>
           <a href="#funding"><CreditCard size={18} /> Contributions</a>
+          <a href="#ledger"><ReceiptText size={18} /> Contribution ledger</a>
           <a href="#scheduling"><CalendarDays size={18} /> Scheduling</a>
         </nav>
         <div className="work-sidebar-profile"><div className="work-avatar">{user.display_name.slice(0, 1).toUpperCase()}</div><div><strong>{user.display_name}</strong><span>{user.email}</span></div></div>
@@ -428,9 +431,10 @@ export function Workspace() {
           </div>
           <ProposalHistory token={token} />
           <FundingPanel token={token} needs={needs} />
+          <LedgerPanel token={token} />
           <ReservationPanel token={token} />
           <section id="next" className="work-next">
-            <div><span className="work-kicker">STAGE 4 · VERIFIED DEMO CHECKOUT</span><h2>Discovery becomes explicit participation.</h2><p>Compatible people can now join a funding group, approve their own Sandbox contribution, and verify captured amounts through PayPal. Bryntum now visualizes persisted, conflict-checked member calendars after funding verification. Physical purchase and handover still remain separate.</p></div>
+            <div><span className="work-kicker">STAGE 6 · TRANSPARENT SHARED FUNDING</span><h2>Discovery becomes explicit participation.</h2><p>Compatible people can now join a funding group, approve their own Sandbox contribution, and verify captured amounts through PayPal. AG Grid now displays the recorded contribution ledger, including verified captures and reversals. Bryntum visualizes persisted, conflict-checked member calendars after funding verification. Physical purchase and handover still remain separate.</p></div>
             <div className="work-next-icon" aria-hidden="true"><Users size={35} /></div>
           </section>
         </main>

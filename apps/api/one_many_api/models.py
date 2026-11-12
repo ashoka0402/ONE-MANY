@@ -286,3 +286,41 @@ class AssetReservation(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
+
+
+class FundingLedgerEvent(Base):
+    """Append-only server-recorded evidence of Sandbox funding state changes.
+
+    A row records an observation; it does not grant a capture, create funds, or
+    claim that a retailer fulfilled a product. Unique keys suppress retries.
+    """
+
+    __tablename__ = "funding_ledger_events"
+    __table_args__ = (
+        CheckConstraint("amount_minor >= 0", name="ck_funding_events_nonnegative"),
+        CheckConstraint("member_slot IS NULL OR member_slot >= 1", name="ck_funding_events_slot"),
+        CheckConstraint(
+            "source IN ('application', 'paypal_verified')",
+            name="ck_funding_events_source",
+        ),
+        Index("ix_funding_events_group_recorded", "group_id", "recorded_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid4)
+    group_id: Mapped[UUID] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("funding_groups.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    attempt_id: Mapped[UUID | None] = mapped_column(
+        Uuid(as_uuid=True), ForeignKey("payment_attempts.id", ondelete="RESTRICT"),
+        nullable=True,
+    )
+    member_slot: Mapped[int | None] = mapped_column(nullable=True)
+    event_type: Mapped[str] = mapped_column(String(48), nullable=False)
+    source: Mapped[str] = mapped_column(String(20), nullable=False)
+    amount_minor: Mapped[int] = mapped_column(nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    event_key: Mapped[str] = mapped_column(String(210), unique=True, nullable=False)
+    recorded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

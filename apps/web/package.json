@@ -24,7 +24,9 @@
     "@tsparticles/engine": "4.5.3",
     "motion": "14.10.1",
     "@bryntum/scheduler-community": "8.0.0",
-    "@bryntum/scheduler-react-community": "8.0.0"
+    "@bryntum/scheduler-react-community": "8.0.0",
+    "ag-grid-community": "36.3.0",
+    "ag-grid-react": "36.3.0"
   },
   "devDependencies": {
     "@types/node": "^20",

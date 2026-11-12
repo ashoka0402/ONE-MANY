@@ -12,6 +12,7 @@ from one_many_api.config import Settings
 from one_many_api.database import build_session_factory
 from one_many_api.discovery_routes import discovery_router
 from one_many_api.funding_routes import funding_router
+from one_many_api.ledger_routes import ledger_router
 from one_many_api.logging import configure_logging
 from one_many_api.reservation_routes import reservation_router
 from one_many_api.routes import router
@@ -39,6 +40,7 @@ def create_app(settings: Settings | None = None) -> CORSMiddleware:
     app.include_router(discovery_router)
     app.include_router(catalog_router)
     app.include_router(funding_router)
+    app.include_router(ledger_router)
     app.include_router(reservation_router)
 
     @app.exception_handler(HTTPException)

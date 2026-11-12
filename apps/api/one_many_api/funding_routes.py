@@ -25,6 +25,7 @@ from one_many_api.channel3 import (
     minor_to_display,
 )
 from one_many_api.database import get_db
+from one_many_api.ledger_events import record_ledger_event
 from one_many_api.matching import _compatible_dates, features_compatible
 from one_many_api.models import (
     FundingGroup,
@@ -265,15 +266,56 @@ def _check_provider_price(db: Session, group: FundingGroup, settings) -> None:
         raise HTTPException(409, "Selected retailer offer, price or currency changed")
 
 
-def _mark_captured(db: Session, group: FundingGroup, attempt: PaymentAttempt, capture_id: str):
+def _audit_attempt(
+    db: Session,
+    group: FundingGroup,
+    attempt: PaymentAttempt,
+    event_type: str,
+    key: str,
+    *,
+    source: str = "application",
+) -> None:
+    slot = db.scalar(select(FundingMember.slot_index).where(
+        FundingMember.group_id == group.id,
+        FundingMember.user_id == attempt.user_id,
+    ))
+    record_ledger_event(
+        db,
+        group_id=group.id,
+        attempt_id=attempt.id,
+        member_slot=slot + 1 if slot is not None else None,
+        event_type=event_type,
+        amount_minor=attempt.amount_minor,
+        currency=attempt.currency,
+        event_key=key,
+        source=source,
+    )
+
+
+def _mark_captured(
+    db: Session,
+    group: FundingGroup,
+    attempt: PaymentAttempt,
+    capture_id: str,
+    *,
+    source: str = "application",
+):
     if attempt.paypal_capture_id is not None and attempt.paypal_capture_id != capture_id:
         group.state = "needs_review"
         attempt.state = "needs_review"
+        _audit_attempt(
+            db, group, attempt, "capture_mismatch",
+            f"review:{attempt.id}", source=source,
+        )
         db.commit()
         raise HTTPException(409, "Different PayPal capture detected; group requires review")
     attempt.paypal_capture_id = capture_id
     attempt.state = "completed"
     db.flush()
+    _audit_attempt(
+        db, group, attempt, "capture_verified",
+        f"capture:{capture_id}", source=source,
+    )
     members = _members(db, group.id)
     completed = list(
         db.scalars(
@@ -366,6 +408,11 @@ def create_group(
             share_minor=proposal.share_amounts_minor[0],
         )
     )
+    record_ledger_event(
+        db, group_id=group.id, member_slot=1, event_type="group_created",
+        amount_minor=proposal.price_minor, currency=group.currency,
+        event_key=f"group:{group.id}",
+    )
     db.commit()
     return CreatedGroupOut(group=_out(db, group, user), invite_code=code)
 
@@ -442,6 +489,12 @@ def join_group(
     )
     if slot + 1 == group.target_members:
         group.state = "funding"
+    record_ledger_event(
+        db, group_id=group.id, member_slot=slot + 1,
+        event_type="member_joined", amount_minor=proposal.share_amounts_minor[slot],
+        currency=group.currency,
+        event_key=f"join:{group.id}:{user.id}",
+    )
     db.commit()
     return _out(db, group, user)
 
@@ -554,6 +607,9 @@ def make_paypal_order(
     attempt.paypal_order_id = order_id
     attempt.approval_url = url
     attempt.state = "awaiting_approval"
+    _audit_attempt(
+        db, group, attempt, "order_created", f"order:{attempt.id}",
+    )
     db.commit()
     return OrderOut(
         paypal_order_id=order_id,
@@ -590,6 +646,9 @@ def capture_my_payment(
         state, capture_id = _verify_attempt_order(paypal, group, attempt, settings)
         if state == "APPROVED":
             attempt.state = "capture_pending"
+            _audit_attempt(
+                db, group, attempt, "capture_requested", f"pending:{attempt.id}",
+            )
             db.commit()  # an uncertain response must NEVER be treated as failure/no charge
             paypal.capture(attempt.paypal_order_id, f"om-capture-{attempt.id.hex}")
             state, capture_id = _verify_attempt_order(paypal, group, attempt, settings)
@@ -599,6 +658,9 @@ def capture_my_payment(
             _mark_captured(db, group, attempt, capture_id)
         else:
             attempt.state = "capture_pending"
+            _audit_attempt(
+                db, group, attempt, "capture_requested", f"pending:{attempt.id}",
+            )
             db.commit()
             return _out(db, group, user)  # Pending is not treated as funded.
     except PayPalUnavailable as exc:
@@ -607,6 +669,9 @@ def capture_my_payment(
     except PayPalInvalid as exc:
         group.state = "needs_review"
         attempt.state = "needs_review"
+        _audit_attempt(
+            db, group, attempt, "capture_mismatch", f"review:{attempt.id}",
+        )
         db.commit()
         raise HTTPException(409, str(exc)) from None
     return _out(db, group, user)
@@ -667,10 +732,16 @@ async def webhook_receive(request: Request, db: Session = Depends(get_db)):
                 raise HTTPException(503, "PayPal reconciliation unavailable") from None
             if state == "COMPLETED" and verified_id == capture_id:
                 if attempt.state not in ("reversed", "needs_review"):
-                    _mark_captured(db, group, attempt, verified_id)
+                    _mark_captured(
+                        db, group, attempt, verified_id, source="paypal_verified"
+                    )
         elif event_type == "PAYMENT.CAPTURE.PENDING":
             if attempt.state not in ("completed", "reversed", "needs_review"):
                 attempt.state = "capture_pending"
+                _audit_attempt(
+                    db, group, attempt, "capture_pending", f"pending:{attempt.id}",
+                    source="paypal_verified",
+                )
         elif event_type in ("PAYMENT.CAPTURE.DENIED", "PAYMENT.CAPTURE.REFUNDED"):
             # Signed status triggers review; never silently count a refunded capture.
             if capture_id == attempt.paypal_capture_id or order_id == attempt.paypal_order_id:
@@ -678,6 +749,13 @@ async def webhook_receive(request: Request, db: Session = Depends(get_db)):
                     "reversed" if event_type == "PAYMENT.CAPTURE.REFUNDED" else "needs_review"
                 )
                 group.state = "needs_review"
+                _audit_attempt(
+                    db, group, attempt,
+                    "refund_reported" if event_type == "PAYMENT.CAPTURE.REFUNDED"
+                    else "denial_reported",
+                    f"webhook:{event_id}",
+                    source="paypal_verified",
+                )
     db.add(PayPalWebhookEvent(event_id=event_id, event_type=event_type))
     db.commit()
     return {"received": True, "duplicate": False}
