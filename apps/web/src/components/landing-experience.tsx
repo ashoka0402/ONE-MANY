@@ -8,9 +8,9 @@ import {
 } from "motion/react";
 import {
   ArrowDown, ArrowRight, ArrowUpRight, CalendarDays, Check, CheckCircle2,
-  ChevronDown, CircleDollarSign, Clock3, CreditCard, Fingerprint,
-  HeartHandshake, Layers3, LockKeyhole, Menu, MousePointer2, Plus,
-  ReceiptText, Search, ShieldCheck, Sparkles, Users, WandSparkles, X,
+  CircleDollarSign, CreditCard, Fingerprint,
+  HeartHandshake, LockKeyhole, Menu, MousePointer2, Plus,
+  ReceiptText, ShieldCheck, Sparkles, Users, WandSparkles, X,
 } from "lucide-react";
 
 const examples = [
@@ -260,17 +260,11 @@ export function LandingExperience() {
   const [members, setMembers] = useState(4);
   const [day, setDay] = useState(3);
   const [faq, setFaq] = useState<number | null>(0);
-  const [light, setLight] = useState({ x: 55, y: 32 });
 
   const share = price / members;
 
   return (
-    <div className="lp" onPointerMove={event => {
-      if (reduced || event.pointerType !== "mouse") return;
-      const rect = event.currentTarget.getBoundingClientRect();
-      setLight({ x: Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100)),
-        y: Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100)) });
-    }} style={{ "--lp-pointer-x": light.x + "%", "--lp-pointer-y": light.y + "%" } as React.CSSProperties}>
+    <div className="lp">
       <div className="lp-ambient lp-ambient-one" aria-hidden="true" />
       <div className="lp-ambient lp-ambient-two" aria-hidden="true" />
       <header className="lp-header">
