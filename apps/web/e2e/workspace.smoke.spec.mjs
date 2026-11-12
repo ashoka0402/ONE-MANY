@@ -47,10 +47,10 @@ test("dark demo: five navigable sections, interactive preview, and real-mode esc
   await page.getByLabel("Email address").fill("demo-preview-" + suffix + "@example.com");
   await page.getByLabel("Password").fill("demo-preview-password-not-real");
   await page.locator("form.work-form").getByRole("button", { name: "Create account" }).click();
-  // The deployed build opens the real workspace first; the preview is explicitly optional.
-  if (await page.getByRole("button", { name: /Explore dark demo/i }).count()) {
-    await page.getByRole("button", { name: /Explore dark demo/i }).click();
-  }
+  // The deployed build opens the real workspace first. Wait for sign-up
+  // navigation to finish before locating the optional preview action.
+  await expect(page.getByRole("heading", { name: "Add a new need" })).toBeVisible();
+  await page.getByRole("button", { name: /Explore dark demo/i }).click();
   await expect(page.getByRole("heading", { name: /Good to see you/i })).toBeVisible();
   await expect(page.getByText("FICTIONAL DEMO").first()).toBeVisible();
 
