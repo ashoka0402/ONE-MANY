@@ -229,7 +229,7 @@ function ScrollStory() {
               transition={{ duration: .38, ease: "easeOut" }}>
               {active === 0 ? <>
                 <div className="lp-scene-icon"><WandSparkles size={25} /></div>
-                <span className="lp-scene-label">WHAT'S ON YOUR MIND?</span>
+                <span className="lp-scene-label">WHAT&apos;S ON YOUR MIND?</span>
                 <div className="lp-scene-input">“{stages[0].quote}”<span className="lp-cursor" /></div>
                 <div className="lp-scene-extraction"><span><Check size={15} /> Asset identified</span><strong>Pressure washer</strong><span>Reusable · physical asset</span></div>
               </> : active === 1 ? <>
@@ -296,7 +296,7 @@ export function LandingExperience() {
               That thing you need once in a while? Someone nearby needs it too. Discover possibilities, share the cost, and make more happen with less.
             </Reveal>
             <Reveal className="lp-hero-buttons" delay={.38}>
-              <Link className="lp-button-primary" href="/app">Discover what's possible <ArrowUpRight size={19} /></Link>
+              <Link className="lp-button-primary" href="/app">Discover what&apos;s possible <ArrowUpRight size={19} /></Link>
               <a className="lp-button-ghost" href="#how-it-works"><span><ArrowDown size={16} /></span> See how it works</a>
             </Reveal>
             <Reveal className="lp-hero-caption" delay={.47}><div className="lp-caption-avatars">{["A", "J", "M"].map((letter, i) => <MiniAvatar letter={letter} index={i} key={letter} />)}</div><span>One idea. Many possibilities.<br /><strong>Explore a fictional example below.</strong></span></Reveal>
@@ -336,7 +336,7 @@ export function LandingExperience() {
             </Reveal>
             <Reveal className="lp-bento-card lp-bento-privacy" delay={.08}>
               <div className="lp-bento-top"><span>02 / HUMAN CONSENT</span><span className="lp-bento-icon"><LockKeyhole size={20} /></span></div>
-              <div className="lp-privacy-art"><div className="lp-privacy-outer"><div className="lp-privacy-inner"><Fingerprint size={64} strokeWidth={1} /></div></div><span className="lp-privacy-tag"><Check size={14} /> YOU'RE IN CONTROL</span></div>
+              <div className="lp-privacy-art"><div className="lp-privacy-outer"><div className="lp-privacy-inner"><Fingerprint size={64} strokeWidth={1} /></div></div><span className="lp-privacy-tag"><Check size={14} /> YOU&apos;RE IN CONTROL</span></div>
               <h3>Your need.<br /><em>Your choice.</em></h3><p>Discovery only happens with your permission. A match never means a purchase.</p>
             </Reveal>
             <Reveal className="lp-bento-card lp-bento-schedule" delay={.07}>
@@ -350,7 +350,7 @@ export function LandingExperience() {
                 ))}
               </div>
               <div className="lp-calendar-detail"><span className="lp-green-dot" /> {day === 3 || day === 5 ? "Example member booking" : "Example date available"}<span>Nov {day + 16}</span></div>
-              <h3>One asset. <em>Everyone's turn.</em></h3><p>Coordinate the days on a shared, conflict-checked calendar after funding verification.</p>
+              <h3>One asset. <em>Everyone&apos;s turn.</em></h3><p>Coordinate the days on a shared, conflict-checked calendar after funding verification.</p>
             </Reveal>
             <Reveal className="lp-bento-card lp-bento-ledger" delay={.13}>
               <div className="lp-bento-top"><span>04 / ABSOLUTE CLARITY</span><span className="lp-bento-icon"><ReceiptText size={20} /></span></div>
@@ -382,7 +382,7 @@ export function LandingExperience() {
 
         <section className="lp-statement" aria-label="One many philosophy">
           <div className="lp-statement-track" aria-hidden="true"><span>OWN LESS <b>✳</b> DO MORE <b>✳</b> SHARE SMARTER <b>✳</b> OWN LESS <b>✳</b> DO MORE <b>✳</b> SHARE SMARTER <b>✳</b> </span></div>
-          <div className="lp-statement-small">GOOD THINGS GET BETTER WHEN THEY'RE SHARED.</div>
+          <div className="lp-statement-small">GOOD THINGS GET BETTER WHEN THEY&apos;RE SHARED.</div>
         </section>
 
         <section id="faq" className="lp-faq lp-container" aria-labelledby="lp-faq-title">
@@ -406,7 +406,7 @@ export function LandingExperience() {
           </Reveal>
         </section>
       </main>
-      <footer className="lp-footer lp-container"><div><BrandMark light /><p>Less to own. More to do. Better together.</p></div><nav aria-label="Footer navigation"><a href="#how-it-works">How it works</a><a href="#explore">Features</a><a href="#faq">FAQ</a><Link href="/app">Launch app</Link></nav><div className="lp-footer-end"><span>ONE / MANY © 2026</span><span>DESIGNED FOR WHAT'S NEXT.</span></div></footer>
+      <footer className="lp-footer lp-container"><div><BrandMark light /><p>Less to own. More to do. Better together.</p></div><nav aria-label="Footer navigation"><a href="#how-it-works">How it works</a><a href="#explore">Features</a><a href="#faq">FAQ</a><Link href="/app">Launch app</Link></nav><div className="lp-footer-end"><span>ONE / MANY © 2026</span><span>DESIGNED FOR WHAT&apos;S NEXT.</span></div></footer>
     </div>
   );
 }
