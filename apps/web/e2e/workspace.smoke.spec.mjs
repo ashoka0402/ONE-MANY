@@ -66,12 +66,12 @@ test("dark demo: five navigable sections, interactive preview, and real-mode esc
 
   await page.getByRole("button", { name: /Shared groups/ }).click();
   await expect(page.getByText("The clean-up crew")).toBeVisible();
-  await page.getByRole("button", { name: /Contributions/ }).click();
+  await page.getByRole("navigation", { name: "Demo navigation" }).getByRole("button", { name: "Contributions" }).click();
   await expect(page.getByText("67% scenario complete")).toBeVisible();
 
   await page.getByRole("button", { name: /Contribution ledger/ }).click();
   await expect(page.getByText("DEMO-1048")).toBeVisible();
-  await page.getByRole("button", { name: /Export demo CSV/ }).toBeVisible();
+  await expect(page.getByRole("button", { name: /Export demo CSV/ })).toBeVisible();
 
   await page.getByRole("button", { name: /Scheduling/ }).click();
   await expect(page.getByText("3 sample bookings")).toBeVisible();
