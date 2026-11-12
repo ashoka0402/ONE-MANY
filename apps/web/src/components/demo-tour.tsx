@@ -5,9 +5,9 @@ import { useMemo, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowLeftRight, ArrowRight, ArrowUpRight, CalendarDays, Check,
-  CheckCircle2, ChevronRight, CircleHelp, CreditCard, FileText,
+  CheckCircle2, ChevronRight, CircleHelp, FileText,
   Handshake, Lightbulb, LogOut, Play, ReceiptText, ShieldCheck,
-  Sparkles, Users,
+  Sparkles,
 } from "lucide-react";
 import type { AuditRow, MemberRow } from "@/components/ag-ledger-grid";
 
@@ -154,7 +154,6 @@ export function DemoTour({ displayName, onLive, onSignOut }: {
     { id: "sample-3", slot: 3, start_date: "2026-11-20", end_date: "2026-11-21", is_you: false },
     { id: "sample-4", slot: 4, start_date: "2026-11-22", end_date: "2026-11-22", is_you: false },
   ];
-  const dayIndex = Number(selectedDay.slice(-2)) - 16;
   const selectedBooking = timeline.find(b => selectedDay >= b.start_date && selectedDay <= b.end_date);
   const heading = {
     needs: ["Understand the need.", "The first step is simply saying what you need."],
