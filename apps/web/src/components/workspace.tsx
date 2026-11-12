@@ -10,10 +10,7 @@ import { DemoTour } from "@/components/demo-tour";
 import {
   ArrowLeft,
   ArrowRight,
-  CalendarDays,
   Check,
-  CreditCard,
-  ReceiptText,
   Lightbulb,
   LoaderCircle,
   LogOut,
@@ -21,7 +18,6 @@ import {
   Plus,
   ShieldCheck,
   Sparkles,
-  Users,
   Search,
 } from "lucide-react";
 
