@@ -223,7 +223,7 @@ export function FundingPanel({ token, needs }: { token: string; needs: Need[] })
           Load groups and drafts
         </button>
       </div>
-      <p className="funding-warning"><ShieldAlert size={18} /> Sandbox only. Contributions go to the merchant's test account, not escrow. No physical item is purchased, and no automatic refunds are promised.</p>
+      <p className="funding-warning"><ShieldAlert size={18} /> Sandbox only. Contributions go to the merchant&apos;s test account, not escrow. No physical item is purchased, and no automatic refunds are promised.</p>
       <p className="funding-helper">
         After PayPal redirects back, this prototype requires signing in again.
         Load your groups and click <strong>Verify / capture approved payment</strong>.
