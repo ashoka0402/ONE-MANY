@@ -2,9 +2,9 @@
 
 Network/provider responses below are test fixtures only. Production never fakes a capture.
 """
+
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from unittest.mock import patch
 
 import httpx
@@ -21,7 +21,11 @@ from one_many_api.database import get_db
 from one_many_api.main import create_app
 from one_many_api.models import Base
 from one_many_api.paypal import (
-    PayPalInvalid, PayPalSandboxClient, approval_link, amount_string, verify_order,
+    PayPalInvalid,
+    PayPalSandboxClient,
+    amount_string,
+    approval_link,
+    verify_order,
 )
 
 TEST_SECRET = "stage-four-test-credentials-not-real-012345678901"
@@ -32,12 +36,14 @@ ITEM = {
     "description": "Battery-operated power drill for home projects",
     "key_features": ["Battery", "Cordless"],
     "structured_attributes": {"power": ["battery"]},
-    "offers": [{
-        "url": OFFER,
-        "domain": "shop.example.test",
-        "price": {"currency": "USD", "price": "90.01"},
-        "availability": "InStock",
-    }],
+    "offers": [
+        {
+            "url": OFFER,
+            "domain": "shop.example.test",
+            "price": {"currency": "USD", "price": "90.01"},
+            "availability": "InStock",
+        }
+    ],
 }
 
 
@@ -52,7 +58,9 @@ def client():
     sessions = sessionmaker(bind=engine, expire_on_commit=False)
     app = create_app(
         Settings(
-            _env_file=None, environment="test", auth_secret=TEST_SECRET,
+            _env_file=None,
+            environment="test",
+            auth_secret=TEST_SECRET,
             channel3_api_key="test-channel3-key",
             paypal_client_id="sandbox-client-test",
             paypal_client_secret="sandbox-secret-test",
@@ -85,7 +93,8 @@ def account(client, name):
 
 def create_need(client, auth, description, *, area="Downtown, Pune", start, end, opt=True):
     response = client.post(
-        "/api/v1/needs", headers=auth,
+        "/api/v1/needs",
+        headers=auth,
         json={
             "request_text": description,
             "location_label": area,
@@ -101,8 +110,11 @@ def create_need(client, auth, description, *, area="Downtown, Pune", start, end,
 def prepare(client, monkeypatch):
     def extracted(text, settings):
         return AIIntent(
-            asset_type="power drill", purpose="DIY fixes",
-            required_features=["battery"], excluded_features=[], shareable=True,
+            asset_type="power drill",
+            purpose="DIY fixes",
+            required_features=["battery"],
+            excluded_features=[],
+            shareable=True,
         )
 
     monkeypatch.setattr("one_many_api.discovery_routes.extract_intent", extracted)
@@ -112,12 +124,18 @@ def prepare(client, monkeypatch):
         account(client, "checkout-stranger"),
     )
     owner_need = create_need(
-        client, a, "Need a drill for my weekend DIY shelves",
-        start="2026-11-15", end="2026-11-16",
+        client,
+        a,
+        "Need a drill for my weekend DIY shelves",
+        start="2026-11-15",
+        end="2026-11-16",
     )
     peer_need = create_need(
-        client, b, "Need a drill to hang curtain rods",
-        start="2026-11-20", end="2026-11-21",
+        client,
+        b,
+        "Need a drill to hang curtain rods",
+        start="2026-11-20",
+        end="2026-11-21",
     )
     for auth, need_id in [(a, owner_need), (b, peer_need)]:
         response = client.post(f"/api/v1/needs/{need_id}/analyze", headers=auth)
@@ -135,7 +153,8 @@ def prepare(client, monkeypatch):
     with patch("one_many_api.funding_routes.Channel3Client.product") as item:
         item.return_value = normalize_product(ITEM, "USD", ["battery"], [])
         created = client.post(
-            f"/api/v1/proposals/{draft_id}/funding-group", headers=a,
+            f"/api/v1/proposals/{draft_id}/funding-group",
+            headers=a,
         )
     assert created.status_code == 201, created.text
     return a, b, outsider, owner_need, peer_need, created.json()
@@ -145,7 +164,8 @@ def joined(client, monkeypatch):
     a, b, outsider, own, peer, created = prepare(client, monkeypatch)
     group_id = created["group"]["id"]
     response = client.post(
-        "/api/v1/funding/join", headers=b,
+        "/api/v1/funding/join",
+        headers=b,
         json={"invite_code": created["invite_code"], "need_id": peer},
     )
     assert response.status_code == 200, response.text
@@ -154,20 +174,30 @@ def joined(client, monkeypatch):
 
 
 def paypal_order(group_id, attempt_id, amount, *, state, currency="USD", capture="CAPTURE9876"):
-    payment = {"captures": [{
-        "id": capture,
-        "status": "COMPLETED",
-        "amount": {"value": amount, "currency_code": currency},
-    }]} if state == "COMPLETED" else {}
+    payment = (
+        {
+            "captures": [
+                {
+                    "id": capture,
+                    "status": "COMPLETED",
+                    "amount": {"value": amount, "currency_code": currency},
+                }
+            ]
+        }
+        if state == "COMPLETED"
+        else {}
+    )
     return {
         "id": "TESTPAYPALORDER123",
         "status": state,
-        "purchase_units": [{
-            "reference_id": group_id,
-            "custom_id": attempt_id,
-            "amount": {"currency_code": currency, "value": amount},
-            "payments": payment,
-        }],
+        "purchase_units": [
+            {
+                "reference_id": group_id,
+                "custom_id": attempt_id,
+                "amount": {"currency_code": currency, "value": amount},
+                "payments": payment,
+            }
+        ],
     }
 
 
@@ -178,29 +208,56 @@ def test_paypal_amounts_and_capture_validation():
         amount_string(9001, "INR")
     with pytest.raises(PayPalInvalid):
         approval_link({"links": [{"rel": "approve", "href": "https://evil.example/capture"}]})
-    assert approval_link({"links": [{
-        "rel": "approve", "href": "https://www.sandbox.paypal.com/checkoutnow?token=test"
-    }]}) == "https://www.sandbox.paypal.com/checkoutnow?token=test"
+    assert (
+        approval_link(
+            {
+                "links": [
+                    {
+                        "rel": "approve",
+                        "href": "https://www.sandbox.paypal.com/checkoutnow?token=test",
+                    }
+                ]
+            }
+        )
+        == "https://www.sandbox.paypal.com/checkoutnow?token=test"
+    )
 
     order = paypal_order("g", "a", "45.01", state="COMPLETED")
     assert verify_order(
-        order, order_id="TESTPAYPALORDER123", reference_id="g",
-        custom_id="a", amount_minor=4501, currency="USD",
+        order,
+        order_id="TESTPAYPALORDER123",
+        reference_id="g",
+        custom_id="a",
+        amount_minor=4501,
+        currency="USD",
     ) == ("COMPLETED", "CAPTURE9876")
     with pytest.raises(PayPalInvalid, match="amount"):
         verify_order(
-            order, order_id="TESTPAYPALORDER123", reference_id="g",
-            custom_id="a", amount_minor=4500, currency="USD",
+            order,
+            order_id="TESTPAYPALORDER123",
+            reference_id="g",
+            custom_id="a",
+            amount_minor=4500,
+            currency="USD",
         )
     with pytest.raises(PayPalInvalid, match="reference"):
         verify_order(
-            order, order_id="TESTPAYPALORDER123", reference_id="wrong",
-            custom_id="a", amount_minor=4501, currency="USD",
+            order,
+            order_id="TESTPAYPALORDER123",
+            reference_id="wrong",
+            custom_id="a",
+            amount_minor=4501,
+            currency="USD",
         )
     with pytest.raises(PayPalInvalid, match="payee"):
         verify_order(
-            order, order_id="TESTPAYPALORDER123", reference_id="g",
-            custom_id="a", amount_minor=4501, currency="USD", merchant_id="expected-payee",
+            order,
+            order_id="TESTPAYPALORDER123",
+            reference_id="g",
+            custom_id="a",
+            amount_minor=4501,
+            currency="USD",
+            merchant_id="expected-payee",
         )
 
 
@@ -217,30 +274,41 @@ def test_paypal_http_endpoints_idempotency_and_sandbox_only(monkeypatch):
         called.append((method, url, headers.get("PayPal-Request-Id"), json))
         if method == "POST" and url.endswith("/v2/checkout/orders"):
             return httpx.Response(
-                201, request=httpx.Request(method, url),
+                201,
+                request=httpx.Request(method, url),
                 json={
-                    "id": "TESTPAYPALORDER123", "status": "CREATED",
-                    "links": [{
-                        "rel": "approve",
-                        "href": "https://www.sandbox.paypal.com/checkoutnow?token=TESTPAYPALORDER123",
-                    }],
+                    "id": "TESTPAYPALORDER123",
+                    "status": "CREATED",
+                    "links": [
+                        {
+                            "rel": "approve",
+                            "href": "https://www.sandbox.paypal.com/checkoutnow?token=TESTPAYPALORDER123",
+                        }
+                    ],
                 },
             )
         return httpx.Response(
-            200, request=httpx.Request(method, url),
+            200,
+            request=httpx.Request(method, url),
             json=paypal_order("g", "a", "45.01", state="APPROVED"),
         )
 
     monkeypatch.setattr("one_many_api.paypal.httpx.post", token_post)
     monkeypatch.setattr("one_many_api.paypal.httpx.request", api_request)
     settings = Settings(
-        _env_file=None, paypal_client_id="test-id", paypal_client_secret="test-secret",
+        _env_file=None,
+        paypal_client_id="test-id",
+        paypal_client_secret="test-secret",
         public_web_url="http://localhost:3000",
     )
     adapter = PayPalSandboxClient(settings)
     order_id, url = adapter.create_order(
-        group_id="g", attempt_id="a", amount_minor=4501, currency="USD",
-        description="Drill", request_id="unique-create-attempt",
+        group_id="g",
+        attempt_id="a",
+        amount_minor=4501,
+        currency="USD",
+        description="Drill",
+        request_id="unique-create-attempt",
     )
     assert order_id == "TESTPAYPALORDER123"
     assert url.startswith("https://www.sandbox.paypal.com/")
@@ -260,28 +328,33 @@ def test_requires_explicit_acceptance_and_owner_access(client, monkeypatch):
     assert created["group"]["state"] == "recruiting"
     assert created["group"]["accepted_count"] == 1
     assert client.get(f"/api/v1/funding/groups/{gid}", headers=outsider).status_code == 404
-    assert client.post(
-        f"/api/v1/funding/groups/{gid}/paypal-order", headers=a
-    ).status_code == 409
+    assert client.post(f"/api/v1/funding/groups/{gid}/paypal-order", headers=a).status_code == 409
 
     wrong = create_need(
-        client, outsider, "Need a drill for a local library",
-        area="Another city", start="2026-11-23", end="2026-11-24",
+        client,
+        outsider,
+        "Need a drill for a local library",
+        area="Another city",
+        start="2026-11-23",
+        end="2026-11-24",
     )
     analyzed = client.post(f"/api/v1/needs/{wrong}/analyze", headers=outsider)
     assert analyzed.status_code == 200, analyzed.text
     rejected = client.post(
-        "/api/v1/funding/join", headers=outsider,
+        "/api/v1/funding/join",
+        headers=outsider,
         json={"invite_code": created["invite_code"], "need_id": wrong},
     )
     assert rejected.status_code == 409
     unknown = client.post(
-        "/api/v1/funding/join", headers=b,
+        "/api/v1/funding/join",
+        headers=b,
         json={"invite_code": "invalid-code-for-another-fake-group", "need_id": peer_need},
     )
     assert unknown.status_code == 404
     joined = client.post(
-        "/api/v1/funding/join", headers=b,
+        "/api/v1/funding/join",
+        headers=b,
         json={"invite_code": created["invite_code"], "need_id": peer_need},
     )
     assert joined.status_code == 200
@@ -299,7 +372,9 @@ def test_order_capture_reconciliation_and_complete_group(client, monkeypatch):
     creation_requests: list[str] = []
     captures: list[str] = []
 
-    def create_provider(self, *, group_id, attempt_id, amount_minor, currency, description, request_id):
+    def create_provider(
+        self, *, group_id, attempt_id, amount_minor, currency, description, request_id
+    ):
         order_id = "ORDER" + attempt_id.replace("-", "")[:22]
         records[order_id] = (group_id, attempt_id, f"{amount_minor / 100:.2f}", currency)
         creation_requests.append(request_id)
@@ -309,7 +384,11 @@ def test_order_capture_reconciliation_and_complete_group(client, monkeypatch):
         group_id, attempt_id, value, currency = records[order_id]
         state = "COMPLETED" if order_id in completed else "APPROVED"
         order = paypal_order(
-            group_id, attempt_id, value, state=state, currency=currency,
+            group_id,
+            attempt_id,
+            value,
+            state=state,
+            currency=currency,
             capture="CAP" + order_id,
         )
         order["id"] = order_id
@@ -320,8 +399,10 @@ def test_order_capture_reconciliation_and_complete_group(client, monkeypatch):
         captures.append(request_id)
         return {"id": order_id, "status": "COMPLETED"}
 
-    monkeypatch.setattr("one_many_api.funding_routes.Channel3Client.product",
-        lambda self, pid, req, excl: normalize_product(ITEM, "USD", req, excl))
+    monkeypatch.setattr(
+        "one_many_api.funding_routes.Channel3Client.product",
+        lambda self, pid, req, excl: normalize_product(ITEM, "USD", req, excl),
+    )
     monkeypatch.setattr(PayPalSandboxClient, "create_order", create_provider)
     monkeypatch.setattr(PayPalSandboxClient, "get_order", retrieve)
     monkeypatch.setattr(PayPalSandboxClient, "capture", capture_provider)
@@ -351,20 +432,33 @@ def test_order_capture_reconciliation_and_complete_group(client, monkeypatch):
     assert last.json()["state"] == "funded"
     assert last.json()["captured_minor"] == 9001
     assert last.json()["accepted_count"] == 2
-    assert client.post(
-        f"/api/v1/funding/groups/{gid}/paypal-order", headers=b,
-    ).status_code == 409
-    assert client.post(
-        f"/api/v1/funding/groups/{gid}/paypal-capture", headers=outsider,
-    ).status_code == 404
+    assert (
+        client.post(
+            f"/api/v1/funding/groups/{gid}/paypal-order",
+            headers=b,
+        ).status_code
+        == 409
+    )
+    assert (
+        client.post(
+            f"/api/v1/funding/groups/{gid}/paypal-capture",
+            headers=outsider,
+        ).status_code
+        == 404
+    )
 
 
 def test_mismatched_capture_does_not_count_as_paid(client, monkeypatch):
     a, b, outsider, own, peer, gid, created = joined(client, monkeypatch)
-    monkeypatch.setattr("one_many_api.funding_routes.Channel3Client.product",
-        lambda self, pid, req, excl: normalize_product(ITEM, "USD", req, excl))
-    monkeypatch.setattr(PayPalSandboxClient, "create_order",
-        lambda self, **kwargs: ("TESTPAYPALORDER123", "https://www.sandbox.paypal.com/checkoutnow"))
+    monkeypatch.setattr(
+        "one_many_api.funding_routes.Channel3Client.product",
+        lambda self, pid, req, excl: normalize_product(ITEM, "USD", req, excl),
+    )
+    monkeypatch.setattr(
+        PayPalSandboxClient,
+        "create_order",
+        lambda self, **kwargs: ("TESTPAYPALORDER123", "https://www.sandbox.paypal.com/checkoutnow"),
+    )
     created_order = client.post(f"/api/v1/funding/groups/{gid}/paypal-order", headers=a)
     assert created_order.status_code == 200
 
@@ -383,11 +477,15 @@ def test_mismatched_capture_does_not_count_as_paid(client, monkeypatch):
 
 def test_verified_webhook_replay_and_refund_never_auto_refunds(client, monkeypatch):
     a, b, _, own, peer, gid, created = joined(client, monkeypatch)
-    monkeypatch.setattr("one_many_api.funding_routes.Channel3Client.product",
-        lambda self, pid, req, excl: normalize_product(ITEM, "USD", req, excl))
+    monkeypatch.setattr(
+        "one_many_api.funding_routes.Channel3Client.product",
+        lambda self, pid, req, excl: normalize_product(ITEM, "USD", req, excl),
+    )
     saved = {}
 
-    def created_order(self, *, group_id, attempt_id, amount_minor, currency, description, request_id):
+    def created_order(
+        self, *, group_id, attempt_id, amount_minor, currency, description, request_id
+    ):
         saved["id"] = attempt_id
         saved["amount"] = f"{amount_minor / 100:.2f}"
         return "TESTPAYPALORDER123", "https://www.sandbox.paypal.com/checkoutnow"
@@ -408,10 +506,11 @@ def test_verified_webhook_replay_and_refund_never_auto_refunds(client, monkeypat
     assert client.get(f"/api/v1/funding/groups/{gid}", headers=a).json()["captured_minor"] == 0
 
     monkeypatch.setattr(PayPalSandboxClient, "verify_webhook", lambda self, headers, event: True)
-    monkeypatch.setattr(PayPalSandboxClient, "get_order",
-        lambda self, order_id: paypal_order(
-            gid, saved["id"], saved["amount"], state="COMPLETED"
-        ))
+    monkeypatch.setattr(
+        PayPalSandboxClient,
+        "get_order",
+        lambda self, order_id: paypal_order(gid, saved["id"], saved["amount"], state="COMPLETED"),
+    )
     success = client.post("/api/v1/paypal/webhook", json=event)
     assert success.status_code == 200, success.text
     assert success.json()["duplicate"] is False
@@ -435,9 +534,16 @@ def test_verified_webhook_replay_and_refund_never_auto_refunds(client, monkeypat
 
 def test_consents_can_block_payments_after_join(client, monkeypatch):
     a, b, _, own, peer, gid, created = joined(client, monkeypatch)
-    assert client.patch(f"/api/v1/needs/{peer}", headers=b, json={
-        "discoverable": False,
-    }).status_code == 200
+    assert (
+        client.patch(
+            f"/api/v1/needs/{peer}",
+            headers=b,
+            json={
+                "discoverable": False,
+            },
+        ).status_code
+        == 200
+    )
     blocked = client.post(f"/api/v1/funding/groups/{gid}/paypal-order", headers=a)
     assert blocked.status_code == 409
     assert client.get(f"/api/v1/funding/groups/{gid}", headers=a).json()["captured_minor"] == 0

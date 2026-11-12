@@ -3,6 +3,7 @@
 An anonymous AI match is NOT a buyer. Every group member must opt in with
 their own independently authenticated, compatible need before any order.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -17,14 +18,29 @@ from sqlalchemy.orm import Session
 
 from one_many_api.ai_service import fingerprint
 from one_many_api.auth import get_current_user
-from one_many_api.channel3 import CatalogMalformed, CatalogUnavailable, Channel3Client, minor_to_display
+from one_many_api.channel3 import (
+    CatalogMalformed,
+    CatalogUnavailable,
+    Channel3Client,
+    minor_to_display,
+)
 from one_many_api.database import get_db
 from one_many_api.matching import _compatible_dates, features_compatible
 from one_many_api.models import (
-    FundingGroup, FundingMember, Need, PaymentAttempt, PayPalWebhookEvent, PurchaseProposal, User,
+    FundingGroup,
+    FundingMember,
+    Need,
+    PaymentAttempt,
+    PayPalWebhookEvent,
+    PurchaseProposal,
+    User,
 )
 from one_many_api.paypal import (
-    PAYPAL_CURRENCIES, PayPalInvalid, PayPalSandboxClient, PayPalUnavailable, verify_order,
+    PAYPAL_CURRENCIES,
+    PayPalInvalid,
+    PayPalSandboxClient,
+    PayPalUnavailable,
+    verify_order,
 )
 from one_many_api.routes import _owned_need
 
@@ -93,6 +109,7 @@ def _now() -> datetime:
 def _sha(code: str) -> str:
     return hashlib.sha256(code.encode("utf-8")).hexdigest()
 
+
 def _aware(dt: datetime) -> datetime:
     return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
 
@@ -108,17 +125,22 @@ def _group(db: Session, group_id: UUID, *, lock: bool = False) -> FundingGroup:
 
 
 def _members(db: Session, group_id: UUID) -> list[FundingMember]:
-    return list(db.scalars(
-        select(FundingMember).where(FundingMember.group_id == group_id)
-        .order_by(FundingMember.slot_index)
-    ).all())
+    return list(
+        db.scalars(
+            select(FundingMember)
+            .where(FundingMember.group_id == group_id)
+            .order_by(FundingMember.slot_index)
+        ).all()
+    )
 
 
 def _assert_member(db: Session, group: FundingGroup, user: User) -> FundingMember:
-    member = db.scalar(select(FundingMember).where(
-        FundingMember.group_id == group.id,
-        FundingMember.user_id == user.id,
-    ))
+    member = db.scalar(
+        select(FundingMember).where(
+            FundingMember.group_id == group.id,
+            FundingMember.user_id == user.id,
+        )
+    )
     if member is None:
         raise HTTPException(404, "Funding group not found")
     return member
@@ -206,7 +228,7 @@ def _revalidate_members(db: Session, group: FundingGroup, settings) -> list[Fund
         _valid_need(need, settings)
         needs.append(need)
     for index, a in enumerate(needs):
-        for b in needs[index + 1:]:
+        for b in needs[index + 1 :]:
             _compatibility(a, b)
     if sum(member.share_minor for member in members) != group.total_minor:
         raise HTTPException(409, "Group shares no longer add up to the accepted quote")
@@ -235,9 +257,9 @@ def _check_provider_price(db: Session, group: FundingGroup, settings) -> None:
     if item.suitability != "candidate":
         raise HTTPException(409, "Product specifications are no longer eligible")
     if not any(
-        offer.url == proposal.merchant_url and
-        offer.currency == group.currency and
-        offer.price_minor == group.total_minor
+        offer.url == proposal.merchant_url
+        and offer.currency == group.currency
+        and offer.price_minor == group.total_minor
         for offer in item.offers
     ):
         raise HTTPException(409, "Selected retailer offer, price or currency changed")
@@ -253,12 +275,14 @@ def _mark_captured(db: Session, group: FundingGroup, attempt: PaymentAttempt, ca
     attempt.state = "completed"
     db.flush()
     members = _members(db, group.id)
-    completed = list(db.scalars(
-        select(PaymentAttempt).where(
-            PaymentAttempt.group_id == group.id,
-            PaymentAttempt.state == "completed",
-        )
-    ).all())
+    completed = list(
+        db.scalars(
+            select(PaymentAttempt).where(
+                PaymentAttempt.group_id == group.id,
+                PaymentAttempt.state == "completed",
+            )
+        ).all()
+    )
     if len(completed) == group.target_members:
         total = sum(a.amount_minor for a in completed)
         if len(members) == group.target_members and total == group.total_minor:
@@ -297,9 +321,9 @@ def create_group(
     db: Session = Depends(get_db),
 ):
     proposal = db.scalar(
-        select(PurchaseProposal).where(
-            PurchaseProposal.id == proposal_id, PurchaseProposal.owner_id == user.id
-        ).with_for_update()
+        select(PurchaseProposal)
+        .where(PurchaseProposal.id == proposal_id, PurchaseProposal.owner_id == user.id)
+        .with_for_update()
     )
     if proposal is None:
         raise HTTPException(404, "Draft quote not found")
@@ -328,16 +352,20 @@ def create_group(
         total_minor=proposal.price_minor,
         currency=proposal.currency,
         target_members=proposal.prospective_members,
-        expires_at=_now() + timedelta(
-            hours=request.app.state.settings.funding_group_lifetime_hours
-        ),
+        expires_at=_now()
+        + timedelta(hours=request.app.state.settings.funding_group_lifetime_hours),
     )
     db.add(group)
     db.flush()
-    db.add(FundingMember(
-        group_id=group.id, user_id=user.id, need_id=need.id,
-        slot_index=0, share_minor=proposal.share_amounts_minor[0],
-    ))
+    db.add(
+        FundingMember(
+            group_id=group.id,
+            user_id=user.id,
+            need_id=need.id,
+            slot_index=0,
+            share_minor=proposal.share_amounts_minor[0],
+        )
+    )
     db.commit()
     return CreatedGroupOut(group=_out(db, group, user), invite_code=code)
 
@@ -380,9 +408,11 @@ def join_group(
         raise HTTPException(404, "Invitation not found")
     if group.state != "recruiting" or _aware(group.expires_at) <= _now():
         raise HTTPException(409, "The invitation is no longer accepting participants")
-    if db.scalar(select(FundingMember).where(
-        FundingMember.group_id == group.id, FundingMember.user_id == user.id
-    )):
+    if db.scalar(
+        select(FundingMember).where(
+            FundingMember.group_id == group.id, FundingMember.user_id == user.id
+        )
+    ):
         return _out(db, group, user)
     need = _owned_need(db, user, payload.need_id)
     _valid_need(need, request.app.state.settings)
@@ -401,10 +431,15 @@ def join_group(
         _valid_need(other, request.app.state.settings)
         _compatibility(other, need)
     slot = len(members)
-    db.add(FundingMember(
-        group_id=group.id, user_id=user.id, need_id=need.id,
-        slot_index=slot, share_minor=proposal.share_amounts_minor[slot],
-    ))
+    db.add(
+        FundingMember(
+            group_id=group.id,
+            user_id=user.id,
+            need_id=need.id,
+            slot_index=slot,
+            share_minor=proposal.share_amounts_minor[slot],
+        )
+    )
     if slot + 1 == group.target_members:
         group.state = "funding"
     db.commit()
@@ -434,7 +469,8 @@ def groups_for_user(
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
-        select(FundingGroup).join(FundingMember, FundingMember.group_id == FundingGroup.id)
+        select(FundingGroup)
+        .join(FundingMember, FundingMember.group_id == FundingGroup.id)
         .where(FundingMember.user_id == user.id)
         .order_by(FundingGroup.created_at.desc(), FundingGroup.id.desc())
         .limit(50)
@@ -465,9 +501,11 @@ def make_paypal_order(
     member = _assert_member(db, group, user)
     if group.state != "funding" or _aware(group.expires_at) <= _now():
         raise HTTPException(409, "Funding group is not accepting new PayPal orders")
-    attempt = db.scalar(select(PaymentAttempt).where(
-        PaymentAttempt.group_id == group.id, PaymentAttempt.user_id == user.id
-    ))
+    attempt = db.scalar(
+        select(PaymentAttempt).where(
+            PaymentAttempt.group_id == group.id, PaymentAttempt.user_id == user.id
+        )
+    )
     if attempt is not None and attempt.state == "awaiting_approval":
         if not attempt.approval_url or not attempt.paypal_order_id:
             raise HTTPException(409, "Order needs reconciliation")
@@ -486,8 +524,10 @@ def make_paypal_order(
         raise HTTPException(409, "Currency is not supported for PayPal Checkout")
     if attempt is None:
         attempt = PaymentAttempt(
-            group_id=group.id, user_id=user.id,
-            amount_minor=member.share_minor, currency=group.currency,
+            group_id=group.id,
+            user_id=user.id,
+            amount_minor=member.share_minor,
+            currency=group.currency,
         )
         db.add(attempt)
         db.commit()  # persist idempotency key BEFORE remote create
@@ -534,16 +574,16 @@ def capture_my_payment(
     settings = request.app.state.settings
     group = _group(db, group_id, lock=True)
     _assert_member(db, group, user)
-    attempt = db.scalar(select(PaymentAttempt).where(
-        PaymentAttempt.group_id == group.id, PaymentAttempt.user_id == user.id
-    ))
+    attempt = db.scalar(
+        select(PaymentAttempt).where(
+            PaymentAttempt.group_id == group.id, PaymentAttempt.user_id == user.id
+        )
+    )
     if attempt is None:
         raise HTTPException(409, "Create and approve your own PayPal order first")
     if attempt.state == "completed":
         return _out(db, group, user)  # idempotent user refresh
-    if group.state != "funding" or attempt.state not in (
-        "awaiting_approval", "capture_pending"
-    ):
+    if group.state != "funding" or attempt.state not in ("awaiting_approval", "capture_pending"):
         raise HTTPException(409, "This payment is not eligible for capture")
     paypal = PayPalSandboxClient(settings)
     try:

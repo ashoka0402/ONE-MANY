@@ -3,6 +3,7 @@
 PayPal docs: https://developer.paypal.com/api/orders/v2/ and
 https://developer.paypal.com/api/rest/webhooks/
 """
+
 from __future__ import annotations
 
 import logging
@@ -33,7 +34,7 @@ def amount_string(amount_minor: int, currency: str) -> str:
     if currency not in PAYPAL_CURRENCIES or amount_minor <= 0:
         raise PayPalInvalid("Currency or amount unsupported by PayPal Sandbox")
     places = CURRENCY_DECIMALS[currency]
-    return f"{Decimal(amount_minor) / (10 ** places):.{places}f}"
+    return f"{Decimal(amount_minor) / (10**places):.{places}f}"
 
 
 def approval_link(order: dict) -> str:
@@ -176,26 +177,42 @@ class PayPalSandboxClient:
             return result
         except (httpx.HTTPError, ValueError, TypeError):
             logger.warning("paypal_api_failure", extra={"operation": method})
-            raise PayPalUnavailable("PayPal Sandbox request failed or requires reconciliation") from None
+            raise PayPalUnavailable(
+                "PayPal Sandbox request failed or requires reconciliation"
+            ) from None
 
     def create_order(
-        self, *, group_id: str, attempt_id: str, amount_minor: int, currency: str,
-        description: str, request_id: str
+        self,
+        *,
+        group_id: str,
+        attempt_id: str,
+        amount_minor: int,
+        currency: str,
+        description: str,
+        request_id: str,
     ) -> tuple[str, str]:
         origin = self.settings.public_web_url.rstrip("/")
         ret = f"{origin}/app?paypal_group={group_id}"
         cancel = f"{origin}/app?paypal_cancel={group_id}"
         result = self._call(
-            "POST", "/v2/checkout/orders",
+            "POST",
+            "/v2/checkout/orders",
             request_id=request_id,
             payload={
                 "intent": "CAPTURE",
-                "purchase_units": [{
-                    "reference_id": group_id,
-                    "custom_id": attempt_id,
-                    "description": f"ONE/MANY sandbox shared-item contribution: {description}"[:127],
-                    "amount": {"currency_code": currency, "value": amount_string(amount_minor, currency)},
-                }],
+                "purchase_units": [
+                    {
+                        "reference_id": group_id,
+                        "custom_id": attempt_id,
+                        "description": f"ONE/MANY sandbox shared-item contribution: {description}"[
+                            :127
+                        ],
+                        "amount": {
+                            "currency_code": currency,
+                            "value": amount_string(amount_minor, currency),
+                        },
+                    }
+                ],
                 "payment_source": {
                     "paypal": {
                         "experience_context": {
@@ -222,8 +239,7 @@ class PayPalSandboxClient:
         if not order_id.isalnum() or len(order_id) > 100:
             raise PayPalInvalid("Invalid PayPal order ID")
         return self._call(
-            "POST", f"/v2/checkout/orders/{order_id}/capture",
-            payload={}, request_id=request_id
+            "POST", f"/v2/checkout/orders/{order_id}/capture", payload={}, request_id=request_id
         )
 
     def verify_webhook(self, headers: Any, event: dict) -> bool:
