@@ -39,8 +39,6 @@ class Settings(BaseSettings):
     def credentials_for_production(self) -> "Settings":
         if self.auth_secret is not None and len(self.auth_secret.get_secret_value()) < 32:
             raise ValueError("AUTH_SECRET must contain at least 32 characters")
-        from urllib.parse import urlsplit
-
         web = urlsplit(self.public_web_url)
         if web.scheme not in ("http", "https") or not web.hostname or web.username or web.password:
             raise ValueError("PUBLIC_WEB_URL must be a valid http(s) origin")
@@ -70,6 +68,21 @@ class Settings(BaseSettings):
             ):
                 raise ValueError("CORS origins must be explicit HTTP(S) origins without paths")
         return origins
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalize_postgres_url(cls, value: str | SecretStr | None) -> str | SecretStr | None:
+        """Accept Render-native PostgreSQL URLs; use the psycopg v3 driver.
+
+        Reject other schemes in the existing strict validator, never expose
+        credentials or log the URI.
+        """
+        if isinstance(value, str):
+            if value.startswith("postgres://"):
+                return "postgresql+psycopg://" + value[len("postgres://"):]
+            if value.startswith("postgresql://"):
+                return "postgresql+psycopg://" + value[len("postgresql://"):]
+        return value
 
     @field_validator("database_url")
     @classmethod

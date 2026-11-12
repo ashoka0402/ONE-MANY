@@ -1,0 +1,49 @@
+# Deploy blueprint: API is a paid Render web service for safe pre-deploy
+# Alembic migrations. Review costs BEFORE applying. Database is demo-only.
+databases:
+  - name: one-many-db
+    databaseName: one_many
+    user: one_many
+    region: singapore
+    plan: free
+
+services:
+  - type: web
+    name: one-many-api
+    runtime: python
+    region: singapore
+    plan: 0.5c-512mb
+    rootDir: apps/api
+    buildCommand: pip install -e .
+    preDeployCommand: python -m alembic upgrade head
+    startCommand: uvicorn one_many_api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/ready
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: one-many-db
+          property: connectionString
+      - key: PUBLIC_WEB_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CHANNEL3_API_KEY
+        sync: false
+      - key: CHANNEL3_COUNTRY
+        value: US
+      - key: CHANNEL3_CURRENCY
+        value: USD
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false

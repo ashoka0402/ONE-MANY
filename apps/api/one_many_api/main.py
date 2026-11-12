@@ -5,6 +5,8 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException
 
 from one_many_api.catalog_routes import catalog_router
@@ -67,16 +69,49 @@ def create_app(settings: Settings | None = None) -> CORSMiddleware:
             content={"error": {"code": "internal_error", "message": "Internal server error"}},
         )
 
+    @app.middleware("http")
+    async def response_hardening(request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["X-Frame-Options"] = "DENY"
+        if request.url.path.startswith("/api/v1/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
     @app.get("/api/v1/health", tags=["health"])
     async def health() -> dict[str, str]:
         return {"status": "ok", "service": "one-many-api", "version": "0.1.0"}
+
+    @app.get("/api/v1/ready", tags=["health"])
+    def ready(request: Request) -> dict[str, str]:
+        """Check actual database connectivity and applied Stage 6 migrations.
+
+        Render must not route app traffic when database schema is absent.
+        A healthy process with missing credentials or a disconnected database
+        remains separately visible via /health.
+        """
+        factory = getattr(request.app.state, "db_session_factory", None)
+        if factory is None:
+            raise HTTPException(503, "Database is not configured")
+        try:
+            with factory() as db:
+                db.execute(text("SELECT 1"))
+                revision = db.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
+                db.execute(text("SELECT 1 FROM funding_ledger_events LIMIT 1"))
+            if revision != "20261112_06":
+                raise HTTPException(503, "Database migrations are not current")
+        except SQLAlchemyError:
+            raise HTTPException(503, "Database is not ready") from None
+        return {"status": "ready", "service": "one-many-api"}
+
 
     # Wrap the entire app so unexpected error responses also receive CORS headers.
     return CORSMiddleware(
         app,
         allow_origins=settings.cors_origins,
         allow_credentials=False,
-        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization"],
     )
 

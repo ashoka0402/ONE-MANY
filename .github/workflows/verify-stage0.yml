@@ -27,6 +27,8 @@ jobs:
           npm run lint:web
           npm run typecheck:web
       - name: Frontend production build
+        env:
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
         run: npm run build:web
       - uses: actions/setup-python@v5
         with:
@@ -288,6 +290,24 @@ jobs:
         run: |
           python -m pytest -q apps/api/tests
           python -m ruff check apps/api
+      - name: Real Chromium end-to-end smoke
+        env:
+          E2E_DATABASE_URL: postgresql+psycopg://one_many:validation-only-not-real@127.0.0.1:5432/one_many
+        run: |
+          npm install --prefix apps/web/e2e --no-audit --no-fund
+          cd apps/web/e2e
+          npx playwright install --with-deps chromium
+          npx playwright test
+      - name: Save browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: one-many-stage7-browser-evidence
+          path: |
+            apps/web/e2e/test-results/
+            apps/web/e2e/playwright-report/
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Validate Compose
         env:
           POSTGRES_PASSWORD: validation-only-not-real
