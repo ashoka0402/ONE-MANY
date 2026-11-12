@@ -49,10 +49,12 @@ function localTimestamp(value: string | null | undefined): string {
   return Number.isNaN(timestamp.getTime()) ? "—" : timestamp.toLocaleString();
 }
 
-export function AgLedgerGrid({ members, events, groupId }: {
+export function AgLedgerGrid({ members, events, groupId, demo = false }: {
   members: MemberRow[];
   events: AuditRow[];
   groupId: string;
+  /** Fictional client-only data. Never label it as verified PayPal records. */
+  demo?: boolean;
 }) {
   const membersRef = useRef<AgGridReact<MemberRow>>(null);
   const eventsRef = useRef<AgGridReact<AuditRow>>(null);
@@ -89,7 +91,7 @@ export function AgLedgerGrid({ members, events, groupId }: {
       valueFormatter: ({ data }) => data?.share_display ?? "—",
     },
     {
-      headerName: "Verified capture",
+      headerName: demo ? "Simulated captured" : "Verified capture",
       field: "captured_minor",
       minWidth: 158,
       type: "numericColumn",
@@ -101,7 +103,7 @@ export function AgLedgerGrid({ members, events, groupId }: {
       minWidth: 188,
       valueFormatter: ({ value }) => localTimestamp(value as string | null),
     },
-  ], []);
+  ], [demo]);
   const eventCols = useMemo<ColDef<AuditRow>[]>(() => [
     {
       headerName: "Recorded at",
@@ -125,7 +127,8 @@ export function AgLedgerGrid({ members, events, groupId }: {
       headerName: "Recorded source",
       field: "source",
       minWidth: 164,
-      valueFormatter: ({ value }) => value === "paypal_verified"
+      valueFormatter: ({ value }) => demo || value === "demo_fictional"
+        ? "Fictional demo — no API" : value === "paypal_verified"
         ? "Verified PayPal webhook" : "Backend",
     },
     {
@@ -135,15 +138,15 @@ export function AgLedgerGrid({ members, events, groupId }: {
       type: "numericColumn",
       valueFormatter: ({ data }) => data?.amount_display ?? "—",
     },
-  ], []);
+  ], [demo]);
   return (
     <AgGridProvider modules={modules}>
       <div className="ledger-grid-block">
         <div className="ledger-grid-header">
-          <div><Users size={16} /><strong>Participant contributions</strong><span>{members.length} accepted</span></div>
+          <div><Users size={16} /><strong>{demo ? "Fictional participant contributions" : "Participant contributions"}</strong><span>{members.length} participants</span></div>
           <button type="button" onClick={() =>
             membersRef.current?.api.exportDataAsCsv({
-              fileName: `one-many-members-${groupId.slice(0, 8)}.csv`,
+              fileName: `${demo ? "FICTIONAL-DEMO" : "one-many"}-members-${groupId.slice(0, 8)}.csv`,
             })
           }>
             <Download size={14} /> Export anonymous CSV
@@ -166,10 +169,10 @@ export function AgLedgerGrid({ members, events, groupId }: {
           />
         </div>
         <div className="ledger-grid-header ledger-grid-audit-title">
-          <div><History size={16} /><strong>Recorded audit events</strong><span>{events.length} shown</span></div>
+          <div><History size={16} /><strong>{demo ? "Fictional event history" : "Recorded audit events"}</strong><span>{events.length} shown</span></div>
           <button type="button" onClick={() =>
             eventsRef.current?.api.exportDataAsCsv({
-              fileName: `one-many-audit-${groupId.slice(0, 8)}.csv`,
+              fileName: `${demo ? "FICTIONAL-DEMO" : "one-many"}-audit-${groupId.slice(0, 8)}.csv`,
             })
           }>
             <Download size={14} /> Export event CSV
