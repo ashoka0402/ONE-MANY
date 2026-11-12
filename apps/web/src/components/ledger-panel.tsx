@@ -109,7 +109,7 @@ export function LedgerPanel({ token }: { token: string }) {
     <section id="ledger" className="ledger-panel" aria-labelledby="ledger-heading">
       <div className="ledger-head">
         <div>
-          <span className="work-kicker">06 / AG GRID · CONTRIBUTION INTELLIGENCE</span>
+          <span className="work-kicker">04 / CONTRIBUTION LEDGER · AG GRID</span>
           <h2 id="ledger-heading">Every contribution. Accounted for.</h2>
           <p>Read-only PayPal Sandbox payment records with clear member approval, verified capture, and reversal states.</p>
         </div>
