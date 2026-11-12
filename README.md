@@ -2,7 +2,7 @@
 
 **Many people. One smarter purchase.**
 
-ONE / MANY helps people discover compatible requests and propose shared purchases. Stage 3 integrates **real Channel3 product searches and offer rechecks** with persistent, deterministic draft cost-sharing quotes. There is no PayPal charge or physical purchase in this stage.
+ONE / MANY helps people discover compatible requests and propose shared purchases. Stages 1–4 implement authenticated needs, AI matching, real Channel3 catalog quotes, and member-approved PayPal **Sandbox-only** funding. No physical retailer purchase is made.
 
 ## Stage 4: PayPal Sandbox funding
 
@@ -92,6 +92,6 @@ GitHub CI tests the provider HTTP contract using mocks (not fake production resp
 
 ## Safety and scope
 
-Quotes are **draft price snapshots**, not verified local shipping costs, investments, escrow, binding group commitments, actual savings, or payment requests. Participants in a quote are derived from compatible opted-in *potential* members and have **not accepted or funded anything**. Hypothetical savings assume each person otherwise would have bought the exact same product. Offers, availability, taxes, shipping, ownership agreements and costs must be rechecked before any real payment. Stage 4 will use PayPal Sandbox only.
+Quotes are **draft price snapshots**, not verified local shipping costs, investments, escrow, binding group commitments, actual savings, or payment requests. Participants in a quote are derived from compatible opted-in *potential* members and have **not accepted or funded anything**. Hypothetical savings assume each person otherwise would have bought the exact same product. Offers, availability, taxes, shipping, ownership agreements and costs must be rechecked before any real payment. Stage 4 implements PayPal Sandbox only; real-money payments are not enabled.
 
 [MIT License](LICENSE).

@@ -56,3 +56,9 @@ An explicit, consented area/asset match is required for a draft; matched peers d
 ## Final Stage 3 verification
 
 GitHub Actions run 43157650820 passed the frontend production build and lint/type checks, 34 Python tests, Ruff, real PostgreSQL migrations and a server-side catalogue-snapshot draft-quote smoke test with a test-only provider fixture. Permanent CI was returned to read-only permissions. Product detail fetch explicitly requests the same country/currency as product search. Live Channel3 credentials and browser QA are deferred to the manual end-to-end validation pass.
+
+## Stage 4 — verified Sandbox checkout (automated tests passed)
+
+Anonymous matches cannot become charged participants. Each account must independently join a time-limited funding group using its own validated matching request with non-overlapping date windows. Each accepted account receives one immutable server-owned share and one durable PayPal order attempt. PayPal-Request-Id values derive from persisted attempt IDs and are reused for retry safety. The backend alone generates amounts and validates completed PayPal captures, including expected group/reference, custom attempt ID, currency and capture ID. Webhooks are verified with PayPal before processing and stored by event ID to reject replays; reversals remove previously counted contributions. State `funded` requires all accepted members' captures and exact total equality.
+
+The PayPal adapter has no Live configuration. Sandbox merchant receipts are not escrow, retailer orders, automatic refunds or legal ownership agreements. The memory-only login design requires signing in again following a PayPal redirect; the user then explicitly initiates server-side reconciliation. CI [run 43161652139](https://github.com/ashoka0402/ONE-MANY/actions/runs/43161652139) passed 41 tests, frontend build and a real PostgreSQL migration/funding smoke. Live provider credentials and browser QA are reserved for the final manual stage.

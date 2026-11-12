@@ -1,6 +1,6 @@
 # Stage 4 — PayPal Sandbox funding and reconciliation
 
-**Implementation committed; automated verification pending.**
+**Stage 4 complete at the automated build/test level.** The PayPal Sandbox API and browser redirect have not been exercised with real credentials.
 
 ## Implemented
 
@@ -13,7 +13,7 @@
 
 ## Still pending
 
-CI must pass Stage 4 frontend, Python tests, PostgreSQL migration and funding smoke checks. Real Gemini, Channel3 and PayPal Sandbox credentials, actual browser redirects and HTTPS webhooks remain in the final manual QA pass.
+GitHub Actions [run 43161652139](https://github.com/ashoka0402/ONE-MANY/actions/runs/43161652139) passed: **41 backend tests**, Ruff, Next.js ESLint/TypeScript/production build, PostgreSQL migration `20261112_04`, a live PostgreSQL recruitment and persisted PayPal order-attempt smoke test, and Docker Compose configuration. Live Gemini/Channel3/PayPal credentials, buyer approval, browser redirect and HTTPS webhook tests remain intentionally deferred to final manual QA. Provider responses are fixtures only inside tests.
 
 ## Boundaries
 
