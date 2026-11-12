@@ -64,6 +64,7 @@ class ReservationBoardOut(BaseModel):
     product_title: str
     group_state: str
     bookable: bool
+    own_version: int
     own_window: OwnWindow | None
     reservations: list[ReservationOut]
     notice: str = NOTICE
@@ -83,11 +84,18 @@ def _board(db: Session, group: FundingGroup, member: FundingMember, user: User) 
             AssetReservation.status == "active",
         ).order_by(AssetReservation.start_date, AssetReservation.id)
     ).all()
+    own_record = db.scalar(
+        select(AssetReservation).where(
+            AssetReservation.group_id == group.id,
+            AssetReservation.user_id == user.id,
+        )
+    )
     return ReservationBoardOut(
         group_id=group.id,
         product_title=_proposal(db, group).product_title,
         group_state=group.state,
         bookable=group.state == "funded",
+        own_version=own_record.version if own_record else 0,
         own_window=own_window,
         reservations=[
             ReservationOut(
